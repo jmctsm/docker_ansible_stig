@@ -1,0 +1,9 @@
+---
+  - name: Backup configs
+    hosts: network
+    tasks:
+      - name: Backup IOS configs
+        cisco.ios.ios_config:
+          backup: yes
+        when: ansible_network_os == 'ios'
+         
