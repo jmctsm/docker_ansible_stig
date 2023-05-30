@@ -3,6 +3,6 @@ mount_command.sh
 venv/
 venv
 venv\
-.vscode\
-.vscode
 .vscode/
+.vscode
+.vscode\
