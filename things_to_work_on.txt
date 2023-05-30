@@ -23,5 +23,6 @@ call main script
 
 would like to have
     dockerfile that runs all this in a virtual environment
+        have the file but not exactly working yet.  Working on python first then that.
     webpage with buttons to control all this
     ability to generate an inventory file from webpage input

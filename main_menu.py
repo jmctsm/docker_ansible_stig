@@ -1,6 +1,6 @@
 #!/python3
 
-from os import system
+import os
 import subprocess
 
 initial_menu_options = {
@@ -9,6 +9,14 @@ initial_menu_options = {
     3: "Run Parsers",
     4: "Exit",
 }
+
+run_ansible_options = {
+    1: "Run Ansible IOS XE STIG in check mode",
+    2: "Run Ansible IOS XE STIG in appy mode",
+    3: "Return to Main Menu",
+    4: "Exit",
+}
+
 
 parsers_menu_options = {
     1: "Network IOS XE STIG XCCDF",
@@ -28,12 +36,74 @@ def print_menu(menu_options):
         print(key, "--", menu_options[key])
 
 
-def option1():
-    print("Handle option 'Option 1'")
+def set_ansible_environment_variables(
+    config_fle_location,
+    stig_ansible_iosxe=False,
+):
+    # subprocess.run([f"ANSIBLE_CONFIG={ config_fle_location }"])
+    os.environ["ANSIBLE_CONFIG"] = config_fle_location
+    if stig_ansible_iosxe:
+        # subprocess.run(["XML_PATH=./transfer/"])
+        # subprocess.run(["STIG_PATH=./playbooks/roles/iosxeSTIG/files/"])
+        os.environ["XML_PATH"] = "./transfer/"
+        os.environ["STIG_PATH"] = "./playbooks/roles/iosxeSTIG/files/"
+    return
+
+
+def unset_ansible_environment_variables(
+    stig_ansible_iosxe=False,
+):
+    # subprocess.run(["unset", "ANSIBLE_CONFIG"])
+    del os.environ["ANSIBLE_CONFIG"]
+    if stig_ansible_iosxe:
+        # subprocess.run(["unset", "XML_PATH"])
+        # subprocess.run(["unset", "STIG_PATH"])
+        del os.environ["XML_PATH"]
+        del os.environ["STIG_PATH"]
+    return
+
+
+def run_ansible():
+    os.system("clear")
+    while True:
+        print_menu(run_ansible_options)
+        option = get_option(parsers_menu_options)
+        print("Options 1 and 2 will also run the XCCDF parser")
+        if option == 1 or option == 2:
+            print("Running Ansible Network IOS XE STIG STIG in check mode")
+            set_ansible_environment_variables(
+                config_fle_location="./playbooks/iosxe_stig_ansible.cfg",
+                stig_ansible_iosxe=True,
+            )
+            if option == 1:
+                subprocess.run(
+                    [
+                        "ansible-playbook",
+                        "playbooks/iosxe_stig.yml",
+                        "--check",
+                    ]
+                )
+            elif option == 2:
+                subprocess.run(
+                    [
+                        "ansible-playbook",
+                        "playbooks/iosxe_stig.yml",
+                    ]
+                )
+            print("Ansible complete.  Running parser now.")
+            subprocess.run(["python", "parsers/iosxe_stig_xccdf_parser.py"])
+            print("Parser complete.  Files in transfer folder. Returning to main menu.")
+            unset_ansible_environment_variables(stig_ansible_iosxe=True)
+            return
+        if option == 3:
+            return
+        if option == 4:
+            print("Exiting the program")
+            exit()
 
 
 def generate_configs():
-    system("clear")
+    os.system("clear")
     while True:
         print_menu(config_menu_options)
         option = get_option(parsers_menu_options)
@@ -53,6 +123,7 @@ def generate_configs():
                 "Config generator run.  Files in transfer folder. ",
                 "Returning to main menu.",
             )
+            return
         if option == 2:
             return
         if option == 3:
@@ -70,7 +141,7 @@ def get_string_input(what_you_want):
 
 
 def run_parsers():
-    system("clear")
+    os.system("clear")
     while True:
         print_menu(parsers_menu_options)
         option = get_option(parsers_menu_options)
@@ -78,6 +149,7 @@ def run_parsers():
             print("Running Network IOS XE STIG XCCDF Parser")
             subprocess.run(["python", "parsers/iosxe_stig_xccdf_parser.py"])
             print("Parser run.  Files in transfer folder. Returning to main menu.")
+            return
         if option == 2:
             return
         if option == 3:
@@ -104,8 +176,7 @@ def main():
         print_menu(initial_menu_options)
         option = get_option(initial_menu_options)
         if option == 1:
-            print("Handle option 'Option 1'")
-            option1()
+            run_ansible()
         elif option == 2:
             generate_configs()
         elif option == 3:
