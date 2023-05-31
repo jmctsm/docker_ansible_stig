@@ -1,8 +1,7 @@
 .vault.txt
-mount_command.sh
 venv/
 venv
 venv\
-.vscode/
-.vscode
-.vscode\
+.mypy_cache/
+.mypy_cache
+.mypy_cache\
