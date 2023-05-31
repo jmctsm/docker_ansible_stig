@@ -8,7 +8,8 @@ import os
 
 
 current_time = time.strftime("%Y%m%d_%H%M%S")
-script_run_path = f"{ os.path.expanduser('~') }/docker_ansible_stig/"
+# script_run_path = f"{ os.path.expanduser('~') }/docker_ansible_stig/"
+script_run_path = f"{ os.getcwd() }/"
 
 transfer_dir = f"{ script_run_path }/transfer/"
 
