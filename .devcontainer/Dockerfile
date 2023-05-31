@@ -8,12 +8,12 @@ RUN groupadd --gid 1000 devops \
     && chmod 0440 /etc/sudoers.d/devops 
 
 USER devops
-RUN mkdir /home/devops/docker_ansible_stig/
-WORKDIR /home/devops/docker_ansible_stig/
-ENV VIRTUALENV=/home/devops/docker_ansible_stig/venv
+WORKDIR /home/devops/
+ENV VIRTUALENV=/home/devops/venv
 ENV ANSIBLE_CONFIG=/workspaces/docker_ansible_stig/playbooks/ansible.cfg
 RUN python3 -m venv $VIRTUALENV
 ENV PATH="$VIRTUALENV/bin:$PATH"
-RUN python -m pip install --upgrade pip 
-RUN echo secret > /workspaces/docker_ansible_stig/.vault.txt
+COPY --chown=devops:devops --chmod=660 requirements_building.txt /home/devops/requirements.txt
+RUN python -m pip install --upgrade pip && python -m pip install -r /home/devops/requirements.txt
+RUN echo secret > /home/devops/.vault.txt
 

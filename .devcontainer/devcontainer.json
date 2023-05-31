@@ -7,7 +7,8 @@
         "vscode": {
             "extensions": [
                 "ms-python.python",
-                "redhat.ansible"
+                "redhat.ansible",
+                "ms-python.vscode-pylance"
             ],
             "settings": {
                 "python.testing.pytestArgs": [
@@ -18,12 +19,23 @@
                 "python.formatting.provider": "black",
                 "python.linting.mypyEnabled": true,
                 "python.linting.enabled": true,
-                "ansible.python.interpreterPath": "/home/devops/docker_ansible_stig/venv/bin/python",
-                "ansible.ansible.path": "/home/devops/docker_ansible_stig/venv/bin/ansible",
+                "ansible.python.interpreterPath": "/home/devops/venv/bin/python",
+                "ansible.ansible.path": "/home/devops/venv/bin/ansible",
                 "ansible.ansible.useFullyQualifiedCollectionNames": true,
-                "ansible.ansibleLint.path": "/home/devops/docker_ansible_stig/venv/bin/ansible-lint",
+                "ansible.ansibleLint.path": "/home/devops/venv/bin/ansible-lint",
                 "ansibleServer.trace.server": "verbose",
-                "ansible.ansibleLint.enabled": true
+                "ansible.ansibleLint.enabled": true,
+                "python.defaultInterpreterPath": "/home/devops/venv/bin/python",
+                "python.linting.pylintEnabled": true,
+                "python.formatting.autopep8Path": "/home/devops/venv/bin/autopep8",
+                "python.formatting.blackPath": "/home/devops/venv/bin/black",
+                "python.formatting.yapfPath": "/home/devops/venv/bin/yapf",
+                "python.linting.banditPath": "/home/devops/venv/bin/bandit",
+                "python.linting.flake8Path": "/home/devops/venv/bin/flake8",
+                "python.linting.mypyPath": "/home/devops/venv/bin/mypy",
+                "python.linting.pycodestylePath": "/home/devops/venv/bin/pycodestyle",
+                "python.linting.pydocstylePath": "/home/devops/venv/bin/pydocstyle",
+                "python.linting.pylintPath": "/home/devops/venv/bin/pylint"
             }
         }
     }
