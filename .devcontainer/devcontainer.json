@@ -1,0 +1,30 @@
+{
+    "name": "Rocky_Ansible",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "redhat.ansible"
+            ],
+            "settings": {
+                "python.testing.pytestArgs": [
+                    "."
+                ],
+                "python.testing.unittestEnabled": false,
+                "python.testing.pytestEnabled": true,
+                "python.formatting.provider": "black",
+                "python.linting.mypyEnabled": true,
+                "python.linting.enabled": true,
+                "ansible.python.interpreterPath": "/home/devops/docker_ansible_stig/venv/bin/python",
+                "ansible.ansible.path": "/home/devops/docker_ansible_stig/venv/bin/ansible",
+                "ansible.ansible.useFullyQualifiedCollectionNames": true,
+                "ansible.ansibleLint.path": "/home/devops/docker_ansible_stig/venv/bin/ansible-lint",
+                "ansibleServer.trace.server": "verbose",
+                "ansible.ansibleLint.enabled": true
+            }
+        }
+    }
+}
