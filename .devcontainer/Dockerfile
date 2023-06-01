@@ -13,6 +13,7 @@ ENV VIRTUALENV=/home/devops/venv
 ENV ANSIBLE_CONFIG=/workspaces/docker_ansible_stig/playbooks/ansible.cfg
 RUN python3 -m venv $VIRTUALENV
 ENV PATH="$VIRTUALENV/bin:$PATH"
+# packages listed here are for building.  Need to move this to a toml but need to see how that works first
 COPY --chown=devops:devops --chmod=660 requirements_building.txt /home/devops/requirements.txt
 RUN python -m pip install --upgrade pip && python -m pip install -r /home/devops/requirements.txt
 RUN echo secret > /home/devops/.vault.txt
