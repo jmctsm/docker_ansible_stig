@@ -13,7 +13,7 @@ import os
 import subprocess
 
 initial_menu_options = {
-    1: "Run Network IOS XE STIG using Ansible (not implemented yet)",
+    1: "Run Network IOS XE STIG using Ansible",
     2: "Generate STIG Config",
     3: "Run Parsers",
     4: "Exit",
@@ -21,7 +21,7 @@ initial_menu_options = {
 
 run_ansible_options = {
     1: "Run Ansible IOS XE STIG in check mode",
-    2: "Run Ansible IOS XE STIG in appy mode",
+    2: "Run Ansible IOS XE STIG in appy mode (not implemented yet)",
     3: "Return to Main Menu",
     4: "Exit",
 }
@@ -41,9 +41,11 @@ config_menu_options = {
 
 
 def print_menu(menu_options):
-    # Using the menu option dictionary provided,
-    # this will then create a menu for the user
-    # to select from
+    """
+    Using the menu option dictionary provided,
+    this will then create a menu for the user
+    to select from
+    """
     for key in menu_options.keys():
         print(key, "--", menu_options[key])
 
@@ -52,10 +54,12 @@ def set_ansible_environment_variables(
     config_fle_location,
     stig_ansible_iosxe=False,
 ):
-    # to use the correct call this uses environment variables
-    # to set the correct Ansible configuration file
-    # if the IOSXE variable is set then certain environment
-    # variables need to be set for the callback
+    """
+    to use the correct call this uses environment variables
+    to set the correct Ansible configuration file
+    if the IOSXE variable is set then certain environment
+    variables need to be set for the callback
+    """
     os.environ["ANSIBLE_CONFIG"] = config_fle_location
     if stig_ansible_iosxe:
         os.environ["XML_PATH"] = "./transfer/"
@@ -66,10 +70,12 @@ def set_ansible_environment_variables(
 def unset_ansible_environment_variables(
     stig_ansible_iosxe=False,
 ):
-    # Once Ansible runs, this will clean up all
-    # environment variables set.  If running this
-    # against an IOS XE box, need to clean up the
-    # PATH variables as well
+    """
+    Once Ansible runs, this will clean up all
+    environment variables set.  If running this
+    against an IOS XE box, need to clean up the
+    PATH variables as well
+    """
     del os.environ["ANSIBLE_CONFIG"]
     if stig_ansible_iosxe:
         del os.environ["XML_PATH"]
@@ -77,7 +83,23 @@ def unset_ansible_environment_variables(
     return
 
 
+def call_subprocess(arg_list):
+    """
+    Will take the arguments for subprocess and pass them into a
+    try/except filter in case something messes up
+    """
+    try:
+        subprocess.run(arg_list, check=True)
+    except subprocess.CalledProcessError:
+        return
+    return
+
+
 def run_ansible():
+    """
+    Run ansible based on options being selected
+    for different devices
+    """
     os.system("clear")
     while True:
         # print the menu for run ansible then get
@@ -97,27 +119,28 @@ def run_ansible():
             )
             # option 1 runs this in check mode
             if option == 1:
-                subprocess.run(
+                call_subprocess(
                     [
                         "ansible-playbook",
                         "playbooks/iosxe_stig.yml",
                         "--check",
-                    ]
+                    ],
                 )
             # option 2 runs this in apply mode
             elif option == 2:
-                subprocess.run(
+                call_subprocess(
                     [
                         "ansible-playbook",
                         "playbooks/iosxe_stig.yml",
-                    ]
+                    ],
                 )
             # once ansible runs, parser will run to make word doc, JSON file,
-            # and configuration file.  Afterwards all environment variables created
-            # are unset and returns to the main menu
+            # and configuration file.  Afterwards all environment variables
+            # created are unset and returns to the main menu
             print("Ansible complete.  Running parser now.")
-            subprocess.run(["python", "parsers/iosxe_stig_xccdf_parser.py"])
-            print("Parser complete.  Files in transfer folder. Returning to main menu.")
+            call_subprocess(["python", "parsers/iosxe_stig_xccdf_parser.py"])
+            print("Parser complete.  Files in transfer folder. ",
+                  "Returning to main menu.")
             unset_ansible_environment_variables(stig_ansible_iosxe=True)
             return
         # returns to the main menu
@@ -130,6 +153,9 @@ def run_ansible():
 
 
 def generate_configs():
+    """
+    Generate configs for devices based on different requirements
+    """
     os.system("clear")
     while True:
         # print menu options and get user input
@@ -142,13 +168,13 @@ def generate_configs():
             print("Will create network IOS XE config")
             hostname = get_string_input("device hostname")
             domain_name = get_string_input("device domain name")
-            subprocess.run(
+            call_subprocess(
                 [
                     "python",
                     "config_generators/iosxe_stig_config_generator.py",
                     f"{ hostname }",
                     f"{ domain_name }",
-                ]
+                ],
             )
             print(
                 "Config generator run.  Files in transfer folder. ",
@@ -165,8 +191,10 @@ def generate_configs():
 
 
 def get_string_input(what_you_want):
-    # keeps trying to get the information from the user and
-    # repeats until correct.
+    """
+    keeps trying to get the information from the user and
+    repeats until correct.
+    """
     while True:
         try:
             string_input = str(input(f"Enter { what_you_want }: "))
@@ -176,17 +204,20 @@ def get_string_input(what_you_want):
 
 
 def run_parsers():
+    """
+    Print menu and get user info.  Option 1 run this against the IOS
+    XE XCCDF output from from Ansible.  Once complete, returns to main
+    menu
+    """
     os.system("clear")
     while True:
-        # Print menu and get user info.  Option 1 run this against the IOS
-        # XE XCCDF output from from Ansible.  Once complete, returns to main
-        # menu
         print_menu(parsers_menu_options)
         option = get_option(parsers_menu_options)
         if option == 1:
             print("Running Network IOS XE STIG XCCDF Parser")
-            subprocess.run(["python", "parsers/iosxe_stig_xccdf_parser.py"])
-            print("Parser run.  Files in transfer folder. Returning to main menu.")
+            call_subprocess(["python", "parsers/iosxe_stig_xccdf_parser.py"])
+            print("Parser run.  Files in transfer folder.  ",
+                  "Returning to main menu.")
             return
         # returns to the main menu
         if option == 2:
@@ -198,8 +229,10 @@ def run_parsers():
 
 
 def get_option(menu_options):
-    # this continues to run until the user enters a number
-    # then returns the number.
+    """
+    this continues to run until the user enters a number
+    then returns the number.
+    """
     while True:
         try:
             option = int(input("Enter your choice: "))
@@ -214,11 +247,13 @@ def get_option(menu_options):
 
 
 def main():
+    """
+    creates the main menu for user selection.
+    This can expand as more options are added.
+    If user does not enter a correct value,
+    repeat the whole thing
+    """
     while True:
-        # creates the main menu for user selection.
-        # This can expand as more options are added.
-        # If user does not enter a correct value,
-        # repeat the whole thing
         print_menu(initial_menu_options)
         option = get_option(initial_menu_options)
         if option == 1:

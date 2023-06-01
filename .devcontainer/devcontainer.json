@@ -17,7 +17,6 @@
                 "python.testing.unittestEnabled": false,
                 "python.testing.pytestEnabled": true,
                 "python.formatting.provider": "black",
-                "python.linting.mypyEnabled": true,
                 "python.linting.enabled": true,
                 "ansible.python.interpreterPath": "/home/devops/venv/bin/python",
                 "ansible.ansible.path": "/home/devops/venv/bin/ansible",
@@ -26,16 +25,20 @@
                 "ansibleServer.trace.server": "verbose",
                 "ansible.ansibleLint.enabled": true,
                 "python.defaultInterpreterPath": "/home/devops/venv/bin/python",
-                "python.linting.pylintEnabled": true,
                 "python.formatting.autopep8Path": "/home/devops/venv/bin/autopep8",
                 "python.formatting.blackPath": "/home/devops/venv/bin/black",
                 "python.formatting.yapfPath": "/home/devops/venv/bin/yapf",
                 "python.linting.banditPath": "/home/devops/venv/bin/bandit",
+                "python.linting.banditEnabled": false,
                 "python.linting.flake8Path": "/home/devops/venv/bin/flake8",
+                "python.linting.flake8Enabled": true,
                 "python.linting.mypyPath": "/home/devops/venv/bin/mypy",
+                "python.linting.mypyEnabled": true,
                 "python.linting.pycodestylePath": "/home/devops/venv/bin/pycodestyle",
+                "python.linting.pycodestyleEnabled": false,
                 "python.linting.pydocstylePath": "/home/devops/venv/bin/pydocstyle",
-                "python.linting.pylintPath": "/home/devops/venv/bin/pylint"
+                "python.linting.pylintPath": "/home/devops/venv/bin/pylint",
+                "python.linting.pylintEnabled": true
             }
         }
     }
