@@ -10,10 +10,10 @@
 
 
 import json
-from docx import Document
 import time
-import yaml
 import os
+from docx import Document
+import yaml
 
 
 current_time = time.strftime("%Y%m%d_%H%M%S")
@@ -42,20 +42,24 @@ config_file_output = f"{ transfer_dir }/iosxe_STIG_config_{ current_time }.txt"
 yaml_stig_fixes_file = f"{ script_run_path }/config_var_files/iosxe_stig_fixes.yaml"
 
 
-# The XCCDF file from the Ansible Playbok comes in with \n and
-# \t.  To make this more uniform, this removes those placeholders and puts in real
-# tabs and newlines for easier parsing later.
 def create_new_xccdf(file_contents):
+    """
+    The XCCDF file from the Ansible Playbok comes in with \n and
+    \t.  To make this more uniform, this removes those placeholders and puts in real
+    tabs and newlines for easier parsing later.
+    """
     formatted_output = file_contents.replace("\\n", "\n").replace("\\t", "\t")
-    with open(parsed_file, "w") as output_file:
+    with open(parsed_file, "w", encoding="utf8") as output_file:
         output_file.write(formatted_output)
 
 
-# creates a dictionary output and JSON output file for parsing later on if required
-# basically reads in a file, sees if a line starts with an ending XML delimiter or not
-# and looks for specific cdf lines to parse on.
 def create_new_output():
-    with open(parsed_file) as file:
+    """
+    creates a dictionary output and JSON output file for parsing later on if required
+    basically reads in a file, sees if a line starts with an ending XML delimiter or not
+    and looks for specific cdf lines to parse on.
+    """
+    with open(parsed_file, encoding="utf8") as file:
         input_lines = file.readlines()
     rule_list = []
     result_list = []
@@ -82,8 +86,10 @@ def create_new_output():
     # dictionary created uses the rule ID as the key and the
     # result as the value
     if len(rule_list) == len(result_list):
-        for i in range(len(rule_list)):
-            output_dict[rule_list[i]] = result_list[i]
+        # for i in range(len(rule_list)):
+        for enum_tuple in enumerate(rule_list):
+            index = enum_tuple[0]
+            output_dict[rule_list[index]] = result_list[index]
     else:
         print(
             f"Something went wrong.  Please consult the { input_file }"
@@ -92,18 +98,21 @@ def create_new_output():
     # create the dictionary and JSON files.
     # returns the dictionary of rules as the key with the
     # result as the value
-    with open(dictionary_output_file, "w") as output_file:
-        for key in output_dict.keys():
-            output_string = f"{ key } = { output_dict[key] }\n"
+    with open(dictionary_output_file, "w", encoding="utf8") as output_file:
+        # for key in output_dict.keys():
+        for key, value in output_dict.items():
+            output_string = f"{ key } = { value }\n"
             output_file.write(output_string)
-    with open(json_output_file, "w") as output_file:
+    with open(json_output_file, "w", encoding="utf8") as output_file:
         json.dump(output_dict, output_file, indent=4)
     return output_dict
 
 
-# Some severities get messed up due to length not being the same
-# this fixes that so that makes it consistent
 def fix_severity_wording(severity):
+    """
+    Some severities get messed up due to length not being the same
+    this fixes that so that makes it consistent
+    """
     if "high" in severity.lower():
         return "high"
     if "low" in severity.lower():
@@ -112,12 +121,14 @@ def fix_severity_wording(severity):
         return "medium"
 
 
-# parses stigs from the XCCDF file to get fixes and IDs
 def parse_stigs():
+    """
+    parses stigs from the XCCDF file to get fixes and IDs
+    """
     rules_dict = {}
     for file in stig_files:
-        with open(file) as input_file:
-            input_string = input_file.read()
+        with open(file, encoding="utf8") as stig_input_file:
+            input_string = stig_input_file.read()
         # split all lines in the list on the "><" because that means the end
         # of a section for the XML
         input_lines = input_string.split("><")
@@ -149,9 +160,10 @@ def parse_stigs():
                     second_counter += 1
                 second_counter += 1
                 rule_fix_ref = input_lines[counter][second_counter:-9]
-                # once this runs, then we have the files so we now need to create the
-                # dictionary that will hold all of this for use later.  Key is the
-                # rule ID and each value is another dictionary of values
+                # once this runs, then we have the files so we now need
+                # to create the dictionary that will hold all of this
+                # for use later.  Key is the rule ID and each value is
+                # another dictionary of values
                 rules_dict[rule_id] = {
                     "rule_title": rule_title,
                     "rule_severity": rule_severity,
@@ -163,8 +175,10 @@ def parse_stigs():
     return rules_dict
 
 
-# makes the output word doc from the findings dictionary and results dictionary
 def print_output(rules_dict, findings_dict):
+    """
+    makes the output word doc from the findings dictionary and results dictionary
+    """
     output_doc = Document()
     # create the title of the document
     output_doc.add_heading("STIG Findings", 0)
@@ -189,8 +203,8 @@ def print_output(rules_dict, findings_dict):
         if key in rules_dict.keys():
             output_doc.add_heading(key, level=1)
             output_doc.add_paragraph(rules_dict[key]["rule_long_title"]).bold = True
-            p = output_doc.add_paragraph("Finding on device: ")
-            p.add_run(findings_dict[key].upper()).bold = True
+            new_paragraph = output_doc.add_paragraph("Finding on device: ")
+            new_paragraph.add_run(findings_dict[key].upper()).bold = True
             output_doc.add_paragraph(f"Rule Title: { rules_dict[key]['rule_title'] }")
             output_doc.add_paragraph(
                 f"Rule Severity: { rules_dict[key]['rule_severity'] }"
@@ -202,11 +216,13 @@ def print_output(rules_dict, findings_dict):
     output_doc.save(output_doc_filename)
 
 
-# Creates the config file for all that failed using the stig fixes file.
 def generate_config_fix(findings_dict):
-    with open(yaml_stig_fixes_file) as yaml_file:
+    """
+    Creates the config file for all that failed using the stig fixes file.
+    """
+    with open(yaml_stig_fixes_file, encoding="utf8") as yaml_file:
         fix_dict = yaml.safe_load(yaml_file)
-    with open(config_file_output, "w") as config_file:
+    with open(config_file_output, "w", encoding="utf8") as config_file:
         for key in findings_dict.keys():
             if findings_dict[key].upper() != "PASS" and key in fix_dict.keys():
                 config_file.write(f"!{ key }")
@@ -216,8 +232,13 @@ def generate_config_fix(findings_dict):
 
 
 def main():
+    """
+    Runs the main program that iterates through the XCCDF file
+    Generates a report
+    and generates a config
+    """
     # remove leading b from file
-    with open(input_file) as file:
+    with open(input_file, encoding="utf8") as file:
         xccdf_file_contents = file.read()
     if xccdf_file_contents[0] == "b":
         new_xccdf_file_contents = xccdf_file_contents[1:]

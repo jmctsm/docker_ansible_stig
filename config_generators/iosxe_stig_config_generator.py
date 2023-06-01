@@ -16,9 +16,9 @@
 """
 
 import time
-import yaml
 import os
 import argparse
+import yaml
 
 
 current_time = time.strftime("%Y%m%d_%H%M%S")
@@ -32,6 +32,9 @@ yaml_stig_fixes_file = f"{ script_run_path }config_var_files/iosxe_stig_fixes.ya
 
 
 def main():
+    """
+    Runs the config generator using the hostname and domain name of a system
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("hostname", help="hostname of the device")
     parser.add_argument("domain_name", help="domain name of the device")
@@ -39,9 +42,9 @@ def main():
     host_name = args.hostname
     domain_name = args.domain_name
 
-    with open(yaml_stig_fixes_file) as yaml_file:
+    with open(yaml_stig_fixes_file, encoding="utf8") as yaml_file:
         fix_dict = yaml.safe_load(yaml_file)
-    with open(config_file_output, "w") as config_file:
+    with open(config_file_output, "w", encoding="utf8") as config_file:
         config_file.write(f"hostname { host_name }\n")
         config_file.write(f"ip domain-name { domain_name }\n")
         # adding this in with extra spaces so that it creates the
