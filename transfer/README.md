@@ -1,0 +1,1 @@
+This directory is where all output files are stored as they are generated.  This includes the roles and the parsers and the configuration generators.
