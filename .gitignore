@@ -6,3 +6,6 @@ venv\
 .mypy_cache
 .mypy_cache\
 *.pyc
+.pytest_cache/
+.pytest_cache
+.pytest_cache\
