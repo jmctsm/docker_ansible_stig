@@ -28,7 +28,7 @@ script_run_path = f"{ os.getcwd() }/"
 transfer_dir = f"{ script_run_path }/transfer/"
 
 config_file_output = f"{ transfer_dir }/iosxe_STIG_config_{ current_time }.txt"
-yaml_stig_fixes_file = f"{ script_run_path }stig_yaml_files/iosxe_stig_fixes.yaml"
+yaml_stig_fixes_file = f"{ script_run_path }config_var_files/iosxe_stig_fixes.yaml"
 
 
 def main():

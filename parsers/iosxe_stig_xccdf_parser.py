@@ -30,7 +30,7 @@ stig_files = [
 
 output_doc_filename = f"{ transfer_dir }/iosxe_STIG_output_{ current_time }.docx"
 config_file_output = f"{ transfer_dir }/iosxe_STIG_config_{ current_time }.txt"
-yaml_stig_fixes_file = f"{ script_run_path }/stig_yaml_files/iosxe_stig_fixes.yaml"
+yaml_stig_fixes_file = f"{ script_run_path }/config_var_files/iosxe_stig_fixes.yaml"
 
 
 def create_new_xccdf(file_contents):
