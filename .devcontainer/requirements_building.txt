@@ -41,3 +41,12 @@ types-PyYAML
 typing_extensions
 wcmatch
 yamllint
+black
+flake8
+mypy
+pytest
+isort
+bandit
+pylint
+autopep8
+yapf

@@ -1,0 +1,3 @@
+These playbooks will use roles to run Ansible playbooks on different hosts.  The goal is that a person will upload an inventory file and then run the main script or run a playbook independently.  Each ansible.cfg file is appended with the type of devices and the documentation it uses.  For example ioxe_stig_ansible.fg is the Ansible configuration file for IOS XE devices using the STIG role.  The playbook of iosxe_stig.yml is the playbook for the IOS XE devices using the STIG role.
+
+- IOS XE STIG
