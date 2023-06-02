@@ -1,0 +1,189 @@
+
+! there are many variables still left to work but
+! this is a good start to work from
+        
+
+hostname test
+ip domain-name asdfasdf
+crypto key gen rsa mod 2048
+
+
+
+! V-220649
+! severity: high
+radius server RADIUS_1
+address ipv4 10.1.22.3
+key xxxxxx
+exit
+radius server RADIUS_2
+address ipv4 10.1.14.5
+key xxxxxx
+exit
+aaa new-model 
+aaa group server radius RADIUS_SERVERS
+server name RADIUS_1
+server name RADIUS_2
+exit
+aaa authentication dot1x default group RADIUS_SERVERS
+dot1x system-auth-control
+int range g1/0 - 8
+switchport mode access 
+authentication host-mode single-host 
+dot1x pae authenticator 
+authentication port-control auto 
+end 
+
+
+! V-220650
+! severity: medium
+vtp password xxxxxxxxx
+
+
+! V-220651
+! severity: medium
+class-map match-all C2_VOICE
+ match ip dscp 47
+class-map match-all VOICE
+ match ip dscp ef
+class-map match-all VIDEO
+ match ip dscp af41
+class-map match-all PREFERRED_DATA
+ match ip dscp af33
+exit
+policy-map QOS_POLICY_SWITCHPORT
+class C2_VOICE
+ priority level 1 10
+class VOICE
+ priority level 2 15
+class VIDEO
+bandwidth percent 25
+class PREFERRED_DATA
+bandwidth percent 25
+class class-default
+bandwidth percent 25
+exit
+exit
+int g1/1
+service-policy output QOS_POLICY_SWITCHPORT
+exit
+int g1/2
+service-policy output QOS_POLICY_SWITCHPORT
+exit
+int g1/3
+service-policy output QOS_POLICY_SWITCHPORT
+end.
+
+
+! V-220655
+! severity: low
+int range g0/0 - 9
+spanning-tree guard root
+
+
+! V-220656
+! severity: medium
+int range g0/0 - 9
+spanning-tree bpduguard enable
+
+
+! V-220657
+! severity: medium
+! Configure the switch to have STP Loop Guard enabled via the spanning-tree loopguard default global command.
+
+! V-220658
+! severity: medium
+int range g0/0 - 9
+switchport block unicast
+
+
+! V-220659
+! severity: medium
+ip dhcp snooping
+ip dhcp snooping vlan 2,4-8,11
+
+
+! V-220660
+! severity: medium
+int range g0/0 - 9
+ip verify source
+
+
+! V-220661
+! severity: medium
+ip arp inspection vlan 2,4-8,11
+
+
+! V-220662
+! severity: low
+int range g0/2 - 8 
+storm-control unicast bps 62000000 
+storm-control broadcast level bps 20000000 
+
+
+! V-220663
+! severity: low
+ip igmp snooping
+
+
+! V-220664
+! severity: medium
+spanning-tree mode rapid-pvst
+spanning-tree mode mst
+
+
+! V-220665
+! severity: medium
+udld enable
+int g0/1
+udld port
+
+
+! V-220666
+! severity: medium
+switchport trunk encapsulation dot1q 
+switchport mode trunk
+switchport nonegotiate
+
+
+! V-220667
+! severity: medium
+int range g0/0 – 9
+ switchport access vlan 999
+int g1/1
+switchport trunk allowed vlan except 999
+
+
+! V-220668
+! severity: medium
+! Remove the assignment of the default VLAN from all access switch ports.
+
+! V-220669
+! severity: medium
+int g0/2
+switchport trunk allowed vlan except 1
+
+
+! V-220670
+! severity: medium
+int vlan 22
+ip add 10.1.22.3 255.255.255.0
+no shut
+
+
+! V-220671
+! severity: medium
+int g0/6
+switchport mode access
+end
+
+
+! V-220672
+! severity: medium
+int g0/1
+switchport trunk native vlan 44
+
+
+! V-220673
+! severity: low
+! Configure all access switch ports to a VLAN other than the native VLAN.
+

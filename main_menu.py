@@ -33,11 +33,7 @@ parsers_menu_options = {
     3: "Exit",
 }
 
-config_menu_options = {
-    1: "Network IOS XE STIG Config",
-    2: "Return to Main Menu",
-    3: "Exit",
-}
+config_menu_options = {}
 
 
 def print_menu(menu_options):
@@ -158,22 +154,40 @@ def generate_configs():
     """
     os.system("clear")
     while True:
+        xml_files = os.listdir(f"{ os.getcwd()}/xml_files/")
+        counter = 1
+        for file in xml_files:
+            config_menu_options[counter] = file
+            counter += 1
+        return_number = counter
+        exit_number = counter + 1
+        config_menu_options[return_number] = "Return to Main Menu"
+        config_menu_options[exit_number] = "Exit"
         # print menu options and get user input
         print_menu(config_menu_options)
         option = get_option(parsers_menu_options)
+        # returns to the main menu
+        if option == return_number:
+            return
+        # Exits the entire program
+        elif option == exit_number:
+            print("Exiting the program")
+            exit()
         # Creates the IOS XE config.  Requires the hostname
         # and device domain name.  Once gotten then pass to the
         # config generator and once done return to the main menu
-        if option == 1:
-            print("Will create network IOS XE config")
+        elif "IOS-XE" in config_menu_options[option]:
+            print("Will create STIG IOS XE config")
             hostname = get_string_input("device hostname")
             domain_name = get_string_input("device domain name")
+            full_file_path = f"{ os.getcwd()}/xml_files/{ config_menu_options[option] }"
             call_subprocess(
                 [
                     "python",
-                    "config_generators/iosxe_stig_config_generator.py",
+                    "disa_scap_converters/iosxe_scap_converter.py",
                     f"{ hostname }",
                     f"{ domain_name }",
+                    f"{ full_file_path }"
                 ],
             )
             print(
@@ -181,13 +195,6 @@ def generate_configs():
                 "Returning to main menu.",
             )
             return
-        # returns to the main menu
-        if option == 2:
-            return
-        # Exits the entire program
-        if option == 3:
-            print("Exiting the program")
-            exit()
 
 
 def get_string_input(what_you_want):
