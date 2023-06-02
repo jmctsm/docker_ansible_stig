@@ -1,0 +1,1078 @@
+
+! there are many variables still left to work but
+! this is a good start to work from
+        
+
+hostname test
+ip domain-name test.com
+crypto key gen rsa mod 2048
+
+
+
+! V-220986
+! severity: medium
+ip access-list extended FILTER_SERVER_TRAFFIC
+permit tcp any 10.1.12.0 0.0.0.255 eq 515 631 9100
+permit tcp any 10.1.13.0 0.0.0.255 eq 1433 1434 4022
+permit icmp any any
+permit ospf any any
+deny ip any any
+exit
+interface g0/1
+ip access-group FILTER_SERVER_TRAFFIC in
+end
+ip access-list extended FILTER_PRINTER_VLAN
+permit tcp any any eq lpd 631 9100
+permit icmp any any
+deny ip any any
+exit
+ip access-list extended FILTER_SQL_VLAN
+permit tcp any any eq 1433 1434 4022
+permit icmp any any
+deny ip any any
+exit
+interface vlan 12
+ip access-group FILTER_PRINTER_VLAN out
+exit
+interface vlan 13
+ip access-group FILTER_SQL_VLAN out
+end
+
+
+! V-220987
+! severity: medium
+router bgp nn
+neighbor x.x.x.x password xxxxxx
+key chain EIGRP_KEY
+key 1
+key-string xxxxx
+exit
+exit
+int g0/0
+ip authentication mode eigrp 1 md5
+ip authentication key-chain eigrp 1 EIGRP_KEY
+end
+int g0/0
+isis password xxxxxx
+int g0/0
+ip ospf authentication-key xxxxx
+end
+
+
+! V-220988
+! severity: medium
+key chain OSPF_KEY_CHAIN
+key 1
+key-string xxxxxx
+send-lifetime 00:00:00 Jan 1 2018 23:59:59 Mar 31 2018
+accept-lifetime 00:00:00 Jan 1 2018 01:05:00 Apr 1 2018
+exit
+key 2
+key-string yyyyyyy
+send-lifetime 00:00:00 Apr 1 2018 23:59:59 Jun 30 2018
+accept-lifetime 23:55:00 Mar 31 2018 01:05:00 Jul 1 2018
+end
+
+
+! V-220989
+! severity: medium
+int g0/1
+ip authentication mode eigrp 1 md5
+ip authentication key-chain eigrp 1 EIGRP_KEY_CHAIN
+int g0/1
+isis authentication mode md5
+isis authentication key-chain ISIS_KEY_CHAIN
+key chain OSPF_KEY_CHAIN
+key 1
+key-string xxxxxx
+cryptographic-algorithm hmac-sha-256
+exit
+end
+interface GigabitEthernet0/2
+ip ospf authentication key-chain OSPF_KEY_CHAIN
+int g1/0
+ip rip authentication mode md5
+ip rip authentication key-chain RIP_KEY_CHAIN
+
+
+! V-220990
+! severity: medium
+key chain OSPF_KEY_CHAIN
+key 1
+key-string xxxxxx
+send-lifetime 00:00:00 Jan 1 2018 23:59:59 Mar 31 2018
+accept-lifetime 00:00:00 Jan 1 2018 01:05:00 Apr 1 2018
+cryptographic-algorithm hmac-sha-256
+exit
+key 2
+key-string yyyyyyy
+send-lifetime 00:00:00 Apr 1 2018 23:59:59 Jun 30 2018
+accept-lifetime 23:55:00 Mar 31 2018 01:05:00 Jul 1 2018
+cryptographic-algorithm hmac-sha-256
+end
+interface GigabitEthernet0/2
+ip ospf authentication key-chain OSPF_KEY_CHAIN
+
+
+! V-220991
+! severity: low
+interface GigabitEthernet3
+shutdown
+interface GigabitEthernet4
+shutdown
+
+
+! V-220994
+! severity: medium
+no boot network
+no service config
+no cns config initial
+no cns exec
+no cns image
+no cns trusted-server config x.x.x.x
+no cns trusted-server image x.x.x.x
+
+
+! V-220995
+! severity: medium
+ip access-list extended CoPP_CRITICAL
+remark our control plane adjacencies are critical
+permit ospf host x.x.x.x any
+permit ospf host x.x.x.x any
+permit pim host x.x.x.x any
+permit pim host x.x.x.x any
+permit igmp any 224.0.0.0 15.255.255.255
+permit tcp host x.x.x.x eq bgp host x.x.x.x
+deny ip any any
+exit
+ip access-list extended CoPP_IMPORTANT
+permit tcp host x.x.x.x eq tacacs any
+permit tcp x.x.x.x 0.0.0.255 any eq 22
+permit udp host x.x.x.x any eq snmp
+permit udp host x.x.x.x eq ntp any
+deny ip any any
+exit
+ip access-list extended CoPP_NORMAL
+remark we will want to rate limit ICMP traffic
+permit icmp any any echo
+permit icmp any any echo-reply
+permit icmp any any time-exceeded
+permit icmp any any unreachable
+deny ip any any
+exit
+ip access-list extended CoPP_UNDESIRABLE
+remark management plane traffic that should not be received
+permit udp any any eq ntp
+permit udp any any eq snmp
+permit tcp any any eq 22
+permit tcp any any eq 23
+remark control plane traffic not configured on switch
+permit eigrp any any
+permit udp any any eq rip
+deny ip any any
+exit
+ip access-list extended CoPP_DEFAULT
+permit ip any any
+exit
+class-map match-all CoPP_CRITICAL
+match access-group name CoPP_CRITICAL
+class-map match-any CoPP_IMPORTANT
+match access-group name CoPP_IMPORTANT
+match protocol arp
+class-map match-all CoPP_NORMAL
+match access-group name CoPP_NORMAL
+class-map match-any CoPP_UNDESIRABLE
+match access-group name CoPP_UNDESIRABLE
+class-map match-all CoPP_DEFAULT
+match access-group name CoPP_DEFAULT
+exit
+policy-map CONTROL_PLANE_POLICY
+class CoPP_CRITICAL
+police 512000 8000 conform-action transmit exceed-action transmit
+class CoPP_IMPORTANT
+police 256000 4000 conform-action transmit exceed-action drop
+class CoPP_NORMAL
+police 128000 2000 conform-action transmit exceed-action drop
+class CoPP_UNDESIRABLE
+police 8000 1000 conform-action drop exceed-action drop
+class CoPP_DEFAULT
+police 64000 1000 conform-action transmit exceed-action drop
+exit
+exit
+exit
+control-plane
+service-policy input CONTROL_PLANE_POLICY
+end
+
+
+! V-220996
+! severity: high
+ip access-list extended EXTERNAL_ACL
+permit tcp host x.11.1.1 eq bgp host x.11.1.2 
+permit tcp host x.11.1.1 host x.11.1.2 eq bgp
+permit icmp host x.11.1.1 host x.11.1.2 echo
+permit icmp host x.11.1.1 host x.11.1.2 echo-reply
+deny ip any host x.11.1.1 log-input
+permit …
+deny ip any any log-input
+ip access-list extended INTERNAL_ACL
+permit ospf host 10.1.12.1 host 10.1.12.2
+permit tcp 10.2.1.0 0.0.0.255 host 10.1.12.2 eq 22
+permit tcp 10.2.1.0 0.0.0.255 host 10.1.12.2 eq tacacs
+permit udp 10.2.1.0 0.0.0.255 host 10.1.12.2 eq snmp
+permit udp 10.2.1.0 0.0.0.255 host 10.1.12.2 eq ntp
+deny ip any host 10.1.12.2 log-input
+permit …
+permit ip any any log-input
+exit
+int g0/2
+ip access-group EXTERNAL_ACL in
+int g0/3
+ip access-group INTERNAL_ACL in
+
+
+! V-220997
+! severity: medium
+ip access-list extended EXTERNAL_ACL
+deny icmp any host x.11.1.2 fragments
+ip access-list extended INTERNAL_ACL
+deny icmp any host 10.1.12.2 fragments
+
+
+! V-220998
+! severity: medium
+no ip gratuitous-arps
+
+
+! V-220999
+! severity: low
+int g0/1
+no ip directed-broadcast
+int vlan11
+no ip directed-broadcast
+
+
+! V-221000
+! severity: medium
+int g0/1
+no ip unreachables
+int null 0
+no ip unreachables
+ip icmp rate-limit unreachable df 100
+ip icmp rate-limit unreachable 100000
+end
+ip access-list ext ICMP_T3C1C13
+permit icmp any any host-unreachable
+permit icmp any any administratively-prohibited
+exit
+route-map LOCAL_POLICY
+match ip address ICMP_T3C1C13
+set interface Null0
+exit
+int null 0
+no ip unreachables
+exit
+ip local policy route-map LOCAL_POLICY
+end
+
+
+! V-221001
+! severity: medium
+int g0/1
+no ip mask-reply
+
+
+! V-221002
+! severity: medium
+int g0/1
+no ip redirects
+
+
+! V-221003
+! severity: low
+ip access-list extended INGRESS_FILTER
+deny ip any any log
+
+
+! V-221004
+! severity: medium
+ip access-list extended INGRESS_FILTER
+deny ip any any log-input
+
+
+! V-221005
+! severity: medium
+ip access-list extended INGRESS_FILTER
+deny ip any any log-input
+
+
+! V-221006
+! severity: low
+line aux 0
+no exec 
+transport input none
+
+
+! V-221007
+! severity: high
+ip access-list extended EXTERNAL_ACL
+permit tcp any any established
+permit tcp host x.11.1.1 eq bgp host x.11.1.2 
+permit tcp host x.11.1.1 host x.11.1.2 eq bgp
+permit icmp host x.11.1.1 host x.11.1.2 echo
+permit icmp host x.11.1.1 host x.11.1.2 echo-reply
+deny ip any any log-input
+int g0/2
+ip access-group EXTERNAL_ACL in
+
+
+! V-221008
+! severity: medium
+ip access-list extended FILTER_PERIMETER
+permit tcp any any established
+permit tcp host x.12.1.9 host x.12.1.10 eq bgp
+permit tcp host x.12.1.9 eq bgp host x.12.1.10
+permit icmp host x.12.1.9 host x.12.1.10 echo
+permit icmp host x.12.1.9 host x.12.1.10 echo-reply
+permit tcp any host x.12.1.22 eq www
+deny ip any any log-input
+exit
+int g0/0
+ip access-group FILTER_PERIMETER in
+
+
+! V-221009
+! severity: medium
+ip access-list extended FILTER_PERIMETER
+permit tcp any any established
+permit udp host x.12.1.9 host x.12.1.21 eq ntp
+deny ip any any log-input
+end
+
+
+! V-221010
+! severity: medium
+ip access-list extended FILTER_PERIMETER
+deny ip 0.0.0.0 0.255.255.255 any log-input
+deny ip 10.0.0.0 0.255.255.255 any log-input
+deny ip 100.64.0.0 0.63.255.255 any log-input
+deny ip 127.0.0.0 0.255.255.255 any log-input
+deny ip 169.254.0.0 0.0.255.255 any log-input
+deny ip 172.16.0.0 0.15.255.255 any log-input
+deny ip 192.0.0.0 0.0.0.255 any log-input
+deny ip 192.0.2.0 0.0.0.255 any log-input
+deny ip 192.168.0.0 0.0.255.255 any log-input
+deny ip 198.18.0.0 0.1.255.255 any log-input
+deny ip 198.51.100.0 0.0.0.255 any log-input
+deny ip 203.0.113.0 0.0.0.255 any log-input
+deny ip 224.0.0.0 31.255.255.255 any log-input
+deny ip 240.0.0.0 15.255.255.255 any log-input
+permit tcp any any established
+permit tcp host x.12.1.9 host x.12.1.10 eq bgp
+permit tcp host x.12.1.9 eq bgp host x.12.1.10
+permit icmp host x.12.1.9 host x.12.1.10 echo
+permit icmp host x.12.1.9 host x.12.1.10 echo-reply
+deny ip any any log-input
+end
+int g0/0
+ip access-group FILTER_PERIMETER in
+end
+
+
+! V-221011
+! severity: high
+int g0/1
+ip verify unicast source reachable-via rx
+
+
+! V-221012
+! severity: medium
+ip access-list extended EXTERNAL_ACL_INBOUND
+permit tcp any any established
+permit tcp host x.11.1.1 eq bgp host x.11.1.2 
+permit tcp host x.11.1.1 host x.11.1.2 eq bgp
+permit icmp host x.11.1.1 host x.11.1.2 echo
+permit icmp host x.11.1.1 host x.11.1.2 echo-reply
+deny ip any any log-input
+exit
+int g0/2
+ip access-group EXTERNAL_ACL_INBOUND in
+
+
+! V-221013
+! severity: medium
+int g0/2
+ip access-group EXTERNAL_ACL_INBOUND in
+
+
+! V-221014
+! severity: medium
+int g0/2
+ip access-group EGRESS_FILTER in
+
+
+! V-221015
+! severity: medium
+ip access-list extended EXTERNAL_ACL
+15 deny ip any any option any-options
+
+
+! V-221016
+! severity: low
+int g0/1
+no lldp transmit
+
+
+! V-221017
+! severity: low
+! Disable CDP on all external interfaces via no cdp enable command or disable CDP globally via no cdp run command.
+
+! V-221018
+! severity: medium
+int g0/1 
+no ip proxy-arp
+
+
+! V-221019
+! severity: medium
+ip access-list extended EXTERNAL_ACL_OUTBOUND
+deny tcp any any eq tacacs log-input
+deny tcp any any eq 22 log-input
+deny udp any any eq snmp log-input
+deny udp any any eq snmptrap log-input
+deny udp any any eq syslog log-input
+permit tcp any any eq www
+deny ip any any log-input
+exit
+int g0/2
+ip access-group EXTERNAL_ACL_OUTBOUND out
+
+
+! V-221020
+! severity: medium
+ip access-list extended INGRESS_MANAGEMENT_ACL
+permit tcp any host 10.11.1.22 eq tacacs
+permit tcp any host 10.11.1.22 eq 22
+permit udp any host 10.11.1.22 eq snmp
+permit udp any host 10.11.1.22 eq snmptrap
+permit udp any host 10.11.1.22 eq ntp
+permit icmp any host 10.11.1.22
+deny ip any any log-input
+exit
+ip access-list extended EGRESS_MANAGEMENT_ACL
+deny ip any any log-input
+exit
+int g0/7
+ip access-group INGRESS_MANAGEMENT_ACL in
+ip access-group EGRESS_MANAGEMENT_ACL out
+
+
+! V-221021
+! severity: low
+router bgp xx
+neighbor x.1.1.9 ttl-security hops 1
+neighbor x.2.1.7 ttl-security hops 1
+
+
+! V-221022
+! severity: medium
+router bgp xx
+neighbor x.1.1.9 password yyyyyyyy 
+neighbor x.2.1.7 password zzzzzzzzz
+
+
+! V-221023
+! severity: medium
+ip prefix-list PREFIX_FILTER deny 0.0.0.0/8 le 32
+ip prefix-list PREFIX_FILTER deny 10.0.0.0/8 le 32
+ip prefix-list PREFIX_FILTER deny 100.64.0.0/10 le 32
+ip prefix-list PREFIX_FILTER deny 127.0.0.0/8 le 32
+ip prefix-list PREFIX_FILTER deny 169.254.0.0/16 le 32
+ip prefix-list PREFIX_FILTER deny 172.16.0.0/12 le 32
+ip prefix-list PREFIX_FILTER deny 192.0.2.0/24 le 32
+ip prefix-list PREFIX_FILTER deny 192.88.99.0/24 le 32
+ip prefix-list PREFIX_FILTER deny 192.168.0.0/16 le 32
+ip prefix-list PREFIX_FILTER deny 198.18.0.0/15 le 32
+ip prefix-list PREFIX_FILTER deny 198.51.100.0/24 le 32
+ip prefix-list PREFIX_FILTER deny 203.0.113.0/24 le 32
+ip prefix-list PREFIX_FILTER deny 224.0.0.0/4 le 32
+ip prefix-list PREFIX_FILTER deny 240.0.0.0/4 le 32
+ip prefix-list PREFIX_FILTER deny 240.0.0.0/4 le 32
+ip prefix-list PREFIX_FILTER permit 0.0.0.0/0 ge 8
+router bgp xx
+neighbor x.1.1.9 prefix-list PREFIX_FILTER in
+neighbor x.2.1.7 prefix-list PREFIX_FILTER in
+route-map FILTER_PREFIX_MAP 10
+match ip address prefix-list PREFIX_FILTER
+exit
+router bgp xx
+neighbor x.1.1.9 route-map FILTER_PREFIX_MAP in
+neighbor x.2.1.7 route-map FILTER_PREFIX_MAP in 
+end
+
+
+! V-221024
+! severity: medium
+ip prefix-list PREFIX_FILTER seq 74 deny x.13.1.0/24 le 32
+switch bgp xx
+neighbor x.1.1.9 prefix-list PREFIX_FILTER in
+neighbor x.2.1.7 prefix-list PREFIX_FILTER in
+end
+
+
+! V-221025
+! severity: medium
+ip prefix-list PREFIX_FILTER_CUST1 permit x.13.1.0/24 le 32
+ip prefix-list PREFIX_FILTER_CUST1 deny 0.0.0.0/0 ge 8
+ip prefix-list PREFIX_FILTER_CUST2 permit x.13.2.0/24 le 32
+ip prefix-list PREFIX_FILTER_CUST2 deny 0.0.0.0/0 ge 8
+router bgp xx
+neighbor x.12.4.14 prefix-list FILTER_PREFIXES_CUST1 in
+neighbor x.12.4.16 prefix-list FILTER_PREFIXES_CUST2 in
+
+
+! V-221026
+! severity: medium
+ip prefix-list CE_PREFIX_ADVERTISEMENTS permit x.13.1.0/24 le 32
+ip prefix-list CE_PREFIX_ADVERTISEMENTS permit x.13.2.0/24 le 32
+ip prefix-list CE_PREFIX_ADVERTISEMENTS permit x.13.3.0/24 le 32
+ip prefix-list CE_PREFIX_ADVERTISEMENTS permit x.13.4.0/24 le 32
+ip prefix-list CE_PREFIX_ADVERTISEMENTS deny 0.0.0.0/0 ge 8
+router bgp 64512
+neighbor x.12.4.14 prefix-list CE_PREFIX_ADVERTISEMENTS out
+neighbor x.12.4.16 prefix-list CE_PREFIX_ADVERTISEMENTS out
+
+
+! V-221027
+! severity: medium
+ip prefix-list FILTER_CORE_PREFIXES deny x.1.1.0/24 le 32
+ip prefix-list FILTER _CORE_PREFIXES deny x.1.2.0/24 le 32
+ip prefix-list FILTER _CORE_PREFIXES permit 0.0.0.0/0 ge 8
+router bgp xx
+neighbor x.1.4.12 prefix-list FILTER _CORE_PREFIXES out
+
+
+! V-221028
+! severity: low
+router bgp xx
+bgp enforce-first-as
+
+
+! V-221029
+! severity: low
+ip as-path access-list 10 permit ^yy$
+ip as-path access-list 10 deny .*
+router bgp xx
+neighbor x.1.4.12 filter-list 10 in
+
+
+! V-221030
+! severity: medium
+router bgp xx
+neighbor x.1.1.9 maximum-prefix nnnnnnn
+neighbor x.2.1.7 maximum-prefix nnnnnnn
+
+
+! V-221031
+! severity: low
+ip prefix-list FILTER_PREFIX_LENGTH permit 0.0.0.0/0 ge 8 le 24
+ip prefix-list FILTER_PREFIX_LENGTH deny 0.0.0.0/0 le 32
+router bgp xx
+neighbor x.1.1.9 prefix-list FILTER_PREFIX_LENGTH in
+neighbor x.2.1.7 prefix-list FILTER_PREFIX_LENGTH in
+
+
+! V-221032
+! severity: low
+router bgp xx
+neighbor 10.1.1.1 update-source Loopback0
+
+
+! V-221033
+! severity: low
+mpls ldp router-id lo0
+
+
+! V-221034
+! severity: low
+router ospf 1
+mpls ldp sync
+router isis
+mpls ldp sync
+
+
+! V-221035
+! severity: low
+ip rsvp signalling rate-limit burst 9 maxsize 2100 period 30 limit 50
+
+
+! V-221036
+! severity: medium
+no mpls ip propagate-ttl
+
+
+! V-221037
+! severity: high
+! Configure the PE switch to have each VRF bound to the appropriate physical or logical interfaces to maintain traffic separation between all MPLS L3VPNs.
+
+! V-221038
+! severity: high
+ip vrf CUST1
+route-target import 13:13
+route-target export 13:13
+end
+
+
+! V-221039
+! severity: medium
+ip vrf CUST1
+rd 13:13
+end
+
+
+! V-221040
+! severity: medium
+mpls ldp neighbor 10.1.1.2 password xxxxxxxx
+
+
+! V-221041
+! severity: high
+! Assign globally unique VC IDs for each virtual circuit and configure the attachment circuits with the appropriate VC ID.
+
+! V-221042
+! severity: high
+l2 vfi VPLS_A manual
+vpn id 110
+neighbor 10.3.3.3 encapsulation mpls
+bridge-domain 100
+exit
+int g0/1
+service instance 10 ethernet
+encapsulation untagged 
+bridge-domain 100
+end
+
+
+! V-221043
+! severity: low
+l2 vfi VPLS_A manual 
+neighbor 10.3.3.3 encapsulation mpls
+
+
+! V-221044
+! severity: medium
+int g3
+service instance 10 ethernet 
+storm-control broadcast cir 12000000
+end
+
+
+! V-221045
+! severity: low
+bridge-domain 100
+ip igmp snooping 
+end
+
+
+! V-221046
+! severity: medium
+mac limit maximum addresses nnnn
+
+
+! V-221047
+! severity: high
+ip access-list extended BLOCK_TO_CORE
+deny ip any 10.1.x.0 0.0.255.255 log-input
+exit
+int SW1(config)#int g0/2
+ip access-group BLOCK_TO_CORE in
+end
+
+
+! V-221048
+! severity: medium
+int SW1(config)#int g0/2
+ip verify unicast source reachable-via any
+end
+
+
+! V-221049
+! severity: medium
+ip options ignore 
+ip options drop
+
+
+! V-221050
+! severity: low
+class-map match-all PREFERRED_DATA
+match ip dscp af33
+class-map match-all CONTROL_PLANE
+match ip dscp cs6
+class-map match-all VIDEO
+match ip dscp af41
+class-map match-all VOICE
+match ip dscp ef
+class-map match-all C2_VOICE
+match ip dscp 47
+exit
+policy-map QOS_POLICY
+class CONTROL_PLANE
+priority percent 10
+class C2_VOICE
+priority percent 10
+class VOICE
+priority percent 15
+class VIDEO
+bandwidth percent 25
+class PREFERRED_DATA
+bandwidth percent 25
+class class-default
+bandwidth percent 15
+exit
+exit
+int g1/1
+service-policy output QOS_POLICY
+exit
+int g1/2
+service-policy output QOS_POLICY
+end
+
+
+! V-221051
+! severity: low
+class-map match-all PREFERRED_DATA
+match ip dscp af33
+class-map match-all CONTROL_PLANE
+match ip dscp cs6
+class-map match-all VIDEO
+match ip dscp af41
+class-map match-all VOICE
+match ip dscp ef
+class-map match-all C2_VOICE
+match ip dscp 47
+exit
+policy-map QOS_POLICY
+class CONTROL_PLANE
+priority percent 10
+class C2_VOICE
+priority percent 10
+class VOICE
+priority percent 15
+class VIDEO
+bandwidth percent 25
+class PREFERRED_DATA
+bandwidth percent 25
+class class-default
+bandwidth percent 15
+exit
+exit
+int g1/1
+service-policy output QOS_POLICY
+exit
+int g1/2
+service-policy output QOS_POLICY
+end
+
+
+! V-221052
+! severity: medium
+class-map match-all SCAVENGER
+match ip dscp cs1
+policy-map QOS_POLICY
+no class class-default
+class SCAVENGER
+bandwidth percent 5
+class class-default
+bandwidth percent 10
+end
+
+
+! V-221053
+! severity: medium
+int g1/1
+no ip pim sparse-mode
+
+
+! V-221054
+! severity: medium
+ip access-list standard PIM_NEIGHBORS
+permit 10.1.2.6
+exit
+int g1/1
+ip pim neighbor-filter PIM_NEIGHBORS
+
+
+! V-221055
+! severity: low
+ip access-list standard MULTICAST_SCOPE
+deny 239.0.0.0 0.255.255.255
+permit any
+exit
+int g1/2
+ip multicast boundary MULTICAST_SCOPE
+end
+
+
+! V-221056
+! severity: low
+ip access-list extended PIM_REGISTER_FILTER 
+deny ip any 239.5.0.0 0.0.255.255 
+permit ip host x.1.2.6 any 
+permit ip host x.1.2.7 any 
+deny ip any any 
+exit 
+ip pim accept-register list PIM_REGISTER_FILTER 
+end 
+ip pim register-rate-limit nn 
+ip access-list extended EXTERNAL_ACL_INBOUND 
+permit tcp any any established 
+permit tcp host x.1.28.2 host x.1.28.8 eq 639 
+deny tcp any host x.1.28.8 eq 639 
+permit tcp host x.1.28.2 host x.1.28.8 eq bgp 
+permit tcp host x.1.28.2 eq bgp host x.1.28.8 
+permit pim host x.1.28.2 host x.1.28.8 
+deny ip any any
+
+
+! V-221057
+! severity: low
+ip access-list extended PIM_REGISTER_FILTER
+deny ip any 239.5.0.0 0.0.255.255
+permit ip host x.1.2.6 any
+permit ip host x.1.2.7 any
+deny ip any any
+exit
+ip pim accept-register list PIM_REGISTER_FILTER
+end
+
+
+! V-221058
+! severity: low
+ip access-list standard PIM_JOIN_FILTER
+deny 239.8.0.0 0.0.255.255
+permit any
+exit
+ip pim accept-rp 10.2.2.2 PIM_JOIN_FILTER 
+end
+
+
+! V-221059
+! severity: medium
+ip pim register-rate-limit nn
+
+
+! V-221060
+! severity: low
+ip access-list standard IGMP_JOIN_FILTER
+deny 239.8.0.0 0.0.255.255
+permit any
+exit
+int vlan3
+ip igmp access-group IGMP_JOIN_FILTER
+
+
+! V-221061
+! severity: medium
+ip access-list extended IGMP_JOIN_FILTER
+deny ip any 232.8.0.0 0.0.255.255
+permit ip x.0.0.0 0.255.255.255 any
+deny ip any any
+exit
+int vlan3
+ip igmp access-group IGMP_JOIN_FILTER
+
+
+! V-221062
+! severity: medium
+int vlan3
+ip igmp limit 2
+
+
+! V-221063
+! severity: medium
+ip pim spt-threshold infinity
+
+
+! V-221064
+! severity: medium
+ip access-list extended EXTERNAL_ACL_INBOUND
+permit tcp any any established
+permit tcp host x.1.28.2 host x.1.28.8 eq 639
+deny tcp any host x1.28.8 eq 639
+permit tcp host x.1.28.2 host x.1.28.8 eq bgp
+permit tcp host x.1.28.2 eq bgp host x.1.28.8
+permit pim host x.1.28.2 host x.1.28.8
+deny ip any any
+
+
+! V-221065
+! severity: medium
+ip msdp password peer x.1.28.8 xxxxxxxxxxxx
+
+
+! V-221066
+! severity: low
+ip access-list extended INBOUND_MSDP_SA_FILTER
+deny ip any host 224.0.1.3 ! Rwhod 
+deny ip any host 224.0.1.24 ! Microsoft-ds
+deny ip any host 224.0.1.22 ! SVRLOC
+deny ip any host 224.0.1.2 ! SGI-Dogfight
+deny ip any host 224.0.1.35 ! SVRLOC-DA
+deny ip any host 224.0.1.60 ! hp-device-disc
+deny ip any host 224.0.1.39 ! Auto-RP
+deny ip any host 224.0.1.40 ! Auto-RP
+deny ip any 232.0.0.0 0.255.255.255 ! SSM range
+deny ip any 239.0.0.0 0.255.255.255 ! Admin scoped range
+deny ip 10.0.0.0 0.255.255.255 any ! RFC 1918 address range
+deny ip 127.0.0.0 0.255.255.255 any ! RFC 1918 address range
+deny ip 172.16.0.0 0.15.255.255 any ! RFC 1918 address range
+deny ip 192.168.0.0 0.0.255.255 any ! RFC 1918 address range
+permit ip any any
+exit
+ip msdp sa-filter in x.1.28.2 list INBOUND_MSDP_SA_FILTER
+
+
+! V-221067
+! severity: low
+ip access-list extended OUTBOUND_MSDP_SA_FILTER
+deny ip 10.0.0.0 0.255.255.255 any
+permit ip any any
+exit
+ip msdp sa-filter in x.1.28.2 list OUTBOUND_MSDP_SA_FILTER
+
+
+! V-221068
+! severity: low
+ip msdp sa-limit x.1.28.2 nnn
+
+
+! V-221069
+! severity: low
+ip msdp peer x.44.2.34 connect-source lo12 remote-as nn
+
+
+! V-237750
+! severity: medium
+! Enable CEF
+
+IPv4 Example: ip cef 
+IPv6 Example: ipv6 cef 
+
+
+! V-237752
+! severity: low
+ipv6 hop-limit 128
+
+
+! V-237756
+! severity: medium
+! Configure the switch using only authorized IPv6 addresses. 
+
+! V-237759
+! severity: medium
+int g1/0
+ipv6 nd ra suppress
+end
+
+
+! V-237762
+! severity: medium
+ipv6 access-list FILTER_IPV6
+deny ipv6 any any undetermined-transport log
+permit ipv6 …
+deny ipv6 any any log
+exit
+int g1/0
+ipv6 traffic-filter FILTER_IPV6 in
+
+
+! V-237764
+! severity: medium
+ipv6 access-list FILTER_IPV6
+permit ipv6 any host 2001:DB8::0:1:1:1234 routing-type 2
+deny ipv6 any any routing log
+permit …
+deny ipv6 any any log
+exit
+int g1/0
+ipv6 traffic-filter FILTER_IPV6
+
+
+! V-237766
+! severity: medium
+ipv6 access-list FILTER_IPV6
+deny hbh any any dest-option-type 4 log
+deny hbh any any dest-option-type 195 log
+deny hbh any any dest-option-type home-address log
+ permit ipv6 …
+deny ipv6 any any log
+exit
+int g1/0
+ipv6 traffic-filter FILTER_IPV6
+end
+
+
+! V-237772
+! severity: medium
+ipv6 access-list FILTER_IPV6
+deny 60 any any dest-option-type 5 log
+deny 60 any any dest-option-type 194 log
+permit …
+deny ipv6 any any log
+exit
+int g1/0
+ipv6 traffic-filter FILTER_IPV6
+end
+
+
+! V-237774
+! severity: medium
+ipv6 access-list FILTER_IPV6
+deny any any dest-option-type 138 log
+permit ipv6 …
+ deny ipv6 any any log
+exit
+int g1/0
+ipv6 traffic-filter FILTER_IPV6
+end
+
+
+! V-237776
+! severity: medium
+ipv6 access-list FILTER_IPV6
+deny 60 any any dest-option-type 195 log
+permit …
+ deny ipv6 any any log
+exit
+int g1/0
+ipv6 traffic-filter FILTER_IPV6
+end
+
+
+! V-237778
+! severity: medium
+ipv6 access-list FILTER_IPV6
+deny any any dest-option-type 2
+deny any any dest-option-type 3
+deny any any dest-option-type 6
+deny any any dest-option-type 9
+deny any any dest-option-type 10
+deny any any dest-option-type 11
+deny any any dest-option-type 12
+deny any any dest-option-type 13
+deny any any dest-option-type 14
+deny any any dest-option-type 16
+deny any any dest-option-type 34
+deny any any dest-option-type 36
+deny any any dest-option-type 37
+deny any any dest-option-type 39
+deny any any dest-option-type 47
+deny any any dest-option-type 49
+deny any any dest-option-type 255
+permit …
+deny ipv6 any any log
+exit
+int g1/0
+ipv6 traffic-filter FILTER_IPV6
+
+

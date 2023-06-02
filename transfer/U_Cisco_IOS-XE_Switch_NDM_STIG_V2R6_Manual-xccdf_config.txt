@@ -1,0 +1,327 @@
+
+! there are many variables still left to work but
+! this is a good start to work from
+        
+
+hostname test
+ip domain-name test.com
+crypto key gen rsa mod 2048
+
+
+
+! V-220518
+! severity: medium
+ip http max-connections 2
+line vty 0 1
+transport input ssh
+line vty 2 4
+transport input none
+
+
+! V-220519
+! severity: medium
+archive
+log config
+logging enable
+end
+
+
+! V-220520
+! severity: medium
+archive
+log config
+logging enable
+end
+
+
+! V-220521
+! severity: medium
+archive
+log config
+logging enable
+end
+
+
+! V-220522
+! severity: medium
+archive
+log config
+logging enable
+end
+
+
+! V-220523
+! severity: medium
+ip access-list standard MANAGEMENT_NET 
+permit x.x.x.0 0.0.0.255 
+exit 
+line vty 0 1
+transport input ssh 
+access-class MANAGEMENT_NET in 
+end
+
+
+! V-220524
+! severity: medium
+login block-for 900 attempts 3 within 120
+
+
+! V-220525
+! severity: medium
+banner login #
+end
+
+
+! V-220526
+! severity: medium
+logging userinfo
+archive
+log config
+logging enable
+end
+
+
+! V-220528
+! severity: medium
+service timestamps log datetime localtime
+
+
+! V-220529
+! severity: medium
+ip access-list extended BLOCK_INBOUND
+deny icmp any any log-input
+
+
+! V-220530
+! severity: medium
+archive
+log config
+logging enable
+end
+
+
+! V-220531
+! severity: medium
+file privilege 15
+
+
+! V-220532
+! severity: medium
+file privilege 15
+
+
+! V-220533
+! severity: medium
+file privilege 15
+
+
+! V-220534
+! severity: high
+no boot network
+no ip boot server
+no ip bootp server
+no ip dns server
+no ip identd
+no ip finger
+no ip http server
+no ip rcmd rcp-enable
+no ip rcmd rsh-enable
+no service config
+no service finger
+no service tcp-small-servers
+no service udp-small-servers
+no service pad
+no service call-home
+end
+
+
+! V-220535
+! severity: medium
+username xxxxxxxxxxx privilege 10 common-criteria-policy PASSWORD_POLICY password xxxxxxxxxx
+aaa authentication login default group tacacs+ local
+
+
+! V-220537
+! severity: medium
+aaa common-criteria policy PASSWORD_POLICY
+min-length 15
+exit
+
+
+! V-220538
+! severity: medium
+aaa common-criteria policy PASSWORD_POLICY
+upper-case 1
+exit
+
+
+! V-220539
+! severity: medium
+aaa common-criteria policy PASSWORD_POLICY
+lower-case 1
+exit
+
+
+! V-220540
+! severity: medium
+aaa common-criteria policy PASSWORD_POLICY
+numeric-count 1
+exit
+
+
+! V-220541
+! severity: medium
+aaa common-criteria policy PASSWORD_POLICY
+special-case 1
+exit
+
+
+! V-220542
+! severity: medium
+aaa common-criteria policy PASSWORD_POLICY
+char-changes 8
+exit
+
+
+! V-220543
+! severity: high
+service password-encryption 
+enable secret xxxxxxxxxxxx
+end
+
+
+! V-220544
+! severity: high
+line vty 0 1
+exec-timeout 5 0
+exit
+line con 0
+exec-timeout 5 0
+exit
+ip http timeout-policy idle 300 life nnnn requests nn
+
+
+! V-220545
+! severity: medium
+archive
+log config
+logging enable
+end
+
+
+! V-220547
+! severity: medium
+logging buffered xxxxxxxx informational
+
+
+! V-220548
+! severity: medium
+logging trap critical
+
+
+! V-220549
+! severity: medium
+ntp server x.x.x.x
+ntp server y.y.y.y
+
+
+! V-220552
+! severity: medium
+snmp-server group V3GROUP v3 auth read V3READ write V3WRITE
+snmp-server user V3USER V3GROUP v3 auth sha xxxxxxx
+snmp-server view V3READ iso included
+snmp-server view V3WRITE iso included
+snmp-server host x.x.x.x version 3 auth V3USER
+
+
+! V-220553
+! severity: medium
+snmp-server group V3GROUP v3 priv read V3READ write V3WRITE
+snmp-server user V3USER V3GROUP v3 auth sha xxxxxx priv aes 256 xxxxxx
+
+
+! V-220554
+! severity: medium
+ntp authenticate
+ntp authentication-key 1 md5 xxxxxx
+ntp trusted-key 1
+ntp server x.x.x.x key 1
+ntp server y.y.y.y key 1
+
+
+! V-220555
+! severity: high
+ip ssh version 2
+iip ssh server algorithm mac hmac-sha2-512 hmac-sha2-256
+
+
+! V-220556
+! severity: high
+iip ssh server algorithm encryption aes256-ctr aes192-ctr aes128-ctr
+
+
+! V-220559
+! severity: medium
+archive
+log config
+logging enable
+end
+
+
+! V-220560
+! severity: medium
+login on-failure log
+login on-success log
+
+
+! V-220561
+! severity: medium
+archive
+log config
+logging enable
+end
+
+
+! V-220565
+! severity: high
+radius host 10.1.48.2 key xxxxxx
+radius host 10.1.48.2 key xxxxxx
+aaa authentication login LOGIN_AUTHENTICATION group radius local
+line vty 0 1
+login authentication LOGIN_AUTHENTICATION
+exit
+line con 0
+login authentication local radius
+exit 
+ip http authentication aaa login-authentication LOGIN_AUTHENTICATION
+
+
+! V-220566
+! severity: medium
+event manager applet BACKUP_CONFIG
+event syslog pattern "%SYS-5-CONFIG_I"
+action 1 cli command "enable"
+action 2 info type switchname
+action 3 cli command "copy run tftp" pattern "remote host"
+action 4 cli command "x.x.x.x" pattern "filename"
+action 5 cli command "$_info_switchname-config"
+action 6 syslog priority informational msg "Configuration backup was executed"
+end
+
+
+! V-220567
+! severity: medium
+! Configure the switch to obtain its public key certificates from an appropriate certificate policy through an approved service provider as show in the example below:
+
+SW2(ca-trustpoint)#enrollment url http://trustpoint1.example.com
+
+! V-220568
+! severity: high
+logging host x.x.x.x
+logging host x.x.x.x
+
+
+! V-220569
+! severity: high
+! Upgrade the switch to a supported release.
+
