@@ -6,36 +6,11 @@ Reads in the XCCDF file from the DISA STIG to then make a config template
 
 import os
 import argparse
+import common_funcs
 
 current_dir = f"{ os.getcwd() }"
 
-# xml_dir = f"{ current_dir }/xml_files"
-
-# scap_file = f"{ xml_dir }/U_Cisco_IOS-XE_Switch_L2S_STIG_V2R3_Manual-xccdf.xml"
-
 output_path = f"{ current_dir }/transfer/"
-
-
-def get_file_contents(file_to_parse):
-    """
-    read in the file contents into a list
-    """
-    with open(file_to_parse, encoding="utf8") as input_file:
-        input_contents = input_file.read()
-    return input_contents.split("><")
-
-
-def fix_severity_wording(severity):
-    """
-    Some severities get messed up due to length not being the same
-    this fixes that so that makes it consistent
-    """
-    if "high" in severity.lower():
-        return "high"
-    if "low" in severity.lower():
-        return "low"
-    if "medium" in severity.lower():
-        return "medium"
 
 
 def create_dict(xml_file_list):
@@ -51,7 +26,7 @@ def create_dict(xml_file_list):
             counter += 1
             rule_title = xml_file_list[counter][6:-7]
             counter += 2
-            rule_severity = fix_severity_wording(xml_file_list[counter][-7:-1])
+            rule_sev = common_funcs.fix_severity_wording(xml_file_list[counter][-7:-1])
             counter += 2
             rule_long_title = xml_file_list[counter][6:-7]
             counter += 1
@@ -71,7 +46,7 @@ def create_dict(xml_file_list):
             # another dictionary of values
             return_dict[rule_id] = {
                 "rule_title": rule_title,
-                "rule_severity": rule_severity,
+                "rule_severity": rule_sev,
                 "rule_long_title": rule_long_title,
                 "rule_fix_ref": rule_fix_ref,
                 "fix_commands": fix_commands(rule_fix_ref)
@@ -128,7 +103,9 @@ def generate_config(xml_dict, input_file, host_name, domain_name):
             if rule_info["fix_commands"]:
                 config_file.write(rule_info["fix_commands"])
             else:
-                config_file.write(f"! { rule_info['rule_fix_ref'] }")
+                fix_list = rule_info['rule_fix_ref'].split("\n")
+                for line in fix_list:
+                    config_file.write(f"! { line }\n")
             config_file.write("\n\n")
 
 
@@ -149,7 +126,7 @@ def main():
         return
     host_name = args.hostname
     domain_name = args.domain_name
-    xml_file_list = get_file_contents(scap_file)
+    xml_file_list = common_funcs.get_file_contents(scap_file)
     xml_file_dict = create_dict(xml_file_list)
     generate_config(xml_file_dict, scap_file, host_name, domain_name)
 
