@@ -1,5 +1,5 @@
 {
-    "name": "Rocky_Ansible",
+    "name": "DevContainer",
     "build": {
         "dockerfile": "Dockerfile"
     },
@@ -8,7 +8,13 @@
             "extensions": [
                 "ms-python.python",
                 "redhat.ansible",
-                "ms-python.vscode-pylance"
+                "ms-python.vscode-pylance",
+                "ms-python.flake8",
+                "ms-python.pylint",
+                "redhat.vscode-yaml",
+                "ms-python.black-formatter",
+                "ms-pyright.pyright",
+                "ms-python.isort"
             ],
             "settings": {
                 "python.testing.pytestArgs": [
