@@ -1,0 +1,274 @@
+
+! there are many variables still left to work but
+! this is a good start to work from
+        
+
+hostname test
+ip domain-name test.com
+crypto key gen rsa mod 2048
+
+
+
+! V-60815
+! severity: None
+! Configure the Arista Multilayer Switch with a local infrequently used account to be used as an account of last resort with full access to the network device.
+
+
+! V-60833
+! severity: None
+configure
+management security
+password minimum length 15
+
+
+! V-60835
+! severity: None
+logging host [ip address]
+logging trap informational
+
+
+! V-60837
+! severity: None
+logging host [ip address]
+logging trap informational
+
+
+! V-60839
+! severity: None
+logging host [ip address]
+logging trap informational
+
+
+! V-60841
+! severity: None
+logging host [ip address]
+logging trap informational
+
+
+! V-60843
+! severity: None
+banner login
+
+
+! V-60845
+! severity: None
+logging host [ip address]
+logging trap informational
+
+
+! V-60847
+! severity: None
+logging host [ip address]
+logging trap informational
+
+
+! V-60849
+! severity: None
+logging host [ip address]
+logging trap informational
+
+
+! V-60851
+! severity: None
+logging host [ip address]
+logging trap informational
+
+
+! V-60853
+! severity: None
+configure
+ip access-list [name]
+10 deny [protocol] [src port] [src mask] [dst port] [dst mask] [options]
+exit
+
+
+! V-60855
+! severity: None
+aaa authentication login console group [radius] local
+
+
+! V-60857
+! severity: None
+management ssh
+idle-timeout 10
+
+
+! V-60859
+! severity: None
+! Configure the network device or its associated audit server to reveal error messages only to authorized individuals.
+! 
+! SNMP is used to fulfill this function. An example SNMP configuration is provided below. To configure SNMP according to site-specific policies and procedures, refer to the Arista Configuration Guide Chapter 37
+! 
+! snmp-server engineID local 
+! snmp-server view snmpview system included
+! snmp-server group ROgroup v3 priv read snmpview
+! snmp-server group RWgroup v3 priv write snmpview
+! snmp-server user disa ROgroup v3
+! snmp-server user disaRW RWgroup v3
+! snmp-server host 10.1.1.1 version 3 priv disaRW
+! snmp-server host 10.2.2.2 version 3 noauth disaRW
+! snmp-server host 10.3.3.3 version 3 noauth disaRW
+! snmp-server host 127.0.0.1 version 3 noauth auth
+! snmp-server host 172.22.29.82 version 3 noauth disaRW
+! snmp-server enable traps
+
+
+! V-60861
+! severity: None
+! Configure the network device to activate a system alert message, send an alarm, and/or automatically shut down when a component failure is detected.
+! 
+! SNMP is used to fulfill this function. An example SNMP configuration is provided below. To configure SNMP according to site-specific policies and procedures, refer to the Arista Configuration Guide, Chapter 37.
+! 
+! snmp-server engineID local 
+! snmp-server view snmpview system included
+! snmp-server group ROgroup v3 priv read snmpview
+! snmp-server group RWgroup v3 priv write snmpview
+! snmp-server user disa ROgroup v3
+! snmp-server user disaRW RWgroup v3
+! snmp-server host 10.1.1.1 version 3 priv disaRW
+! snmp-server host 10.2.2.2 version 3 noauth disaRW
+! snmp-server host 10.3.3.3 version 3 noauth disaRW
+! snmp-server host 127.0.0.1 version 3 noauth auth
+! snmp-server host 172.22.29.82 version 3 noauth disaRW
+! snmp-server enable traps
+
+
+! V-60863
+! severity: None
+ntp server HOST
+ntp server HOST prefer
+
+
+! V-60865
+! severity: None
+ntp server HOST
+ntp server HOST prefer
+
+
+! V-60867
+! severity: None
+! Configure the network device to record time stamps for audit records that can be mapped to Coordinated Universal Time (UTC) or Greenwich Mean Time (GMT).
+! 
+! This can be configured with the following command:
+! 
+! clock timezone GMT
+
+
+! V-60869
+! severity: None
+configure
+management telnet
+shutdown
+exit
+management api http-commands
+no protocol http
+protocol https
+exit 
+
+
+! V-60871
+! severity: None
+configure
+management telnet
+shutdown
+exit
+management api http-commands
+no protocol http
+protocol https
+exit 
+
+
+! V-60873
+! severity: None
+! Configure the network device to generate audit records for privileged activities or other system-level access.
+! 
+! aaa accounting commands all default start-stop
+! aaa accounting exec default start-stop
+! aaa accounting system default start-stop
+
+
+! V-60875
+! severity: None
+logging trap 6
+logging level all 6
+
+
+! V-60877
+! severity: None
+logging trap 6
+logging level all 6
+
+
+! V-60879
+! severity: None
+logging trap 6
+logging level all 6
+
+
+! V-60881
+! severity: None
+logging host[ a.b.c.d]
+logging trap informational
+
+
+! V-60883
+! severity: None
+config
+logging host a.b.c.d
+logging trap informational
+username [name] role [role name]
+
+
+! V-60885
+! severity: None
+aaa authentication login default group [group name] [radius/tacacs] [local]
+aaa authentication login console [group] [group name/radius/tacacs+] [local]
+aaa authentication dot1x default group [group] [radius]
+aaa authentication policy on-success log
+aaa authentication policy on-failure log
+aaa authorization console
+aaa authorization exec default [radius/tacacs] local
+aaa authorization commands all default local
+aaa accounting exec default start-stop logging
+aaa accounting system default start-stop logging
+aaa accounting commands all default start-stop logging
+no aaa root
+
+
+! V-60887
+! severity: None
+schedule [name] at [hh:mm:ss] interval 1440 max-log-files 100 command bash FastCli -p 15 -c $'enable\nshow tech-support &gt; scp:[remote destination/filename]\n'
+
+
+! V-67195
+! severity: None
+! Configure the Arista Multilayer Switch to use an approved software version. Download the approved version from www.arista.com/support, copy the .swi file to flash via an approved file transfer mechanism, and then enter:
+! 
+! Enable
+! Configure
+! Boot system flash:&lt;your_image.swi&gt;
+! Write memory
+! reload
+
+
+! V-67197
+! severity: None
+! Enable FIPS restrictions via the following commands:
+! Enable
+! Configure
+! Management ssh
+! Fips restrictions
+! Exit
+! 
+! Additionally, the switch should be configured to use its Hardware Random Number Generator as a source of entropy for the SSH protocol. To enable this, configure:
+! 
+! Enable
+! Configure
+! Management security
+! Entropy source hardware
+! 
+! Once this has been changed, regenerate the SSH RSA Keys with:
+! 
+! Reset ssh hostkey rsa
+
+

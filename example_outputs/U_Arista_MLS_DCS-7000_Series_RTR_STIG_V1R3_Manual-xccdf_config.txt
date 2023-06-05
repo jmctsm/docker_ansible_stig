@@ -1,0 +1,257 @@
+
+! there are many variables still left to work but
+! this is a good start to work from
+        
+
+hostname test
+ip domain-name test.com
+crypto key gen rsa mod 2048
+
+
+
+! V-60817
+! severity: None
+! Configure the router to enforce approved authorizations for controlling the flow of information between interconnected networks in accordance with applicable policy.
+! 
+! To use an IP access list to fulfill this function, enter the following commands, substituting organizational values for the bracketed variables.
+! 
+! ip access-list [name]
+! [permit/deny] [protocol] [source address] [source port] [destination address] [destination port] 
+! exit
+! 
+! interface [type] [number]
+! ip access-group [name] [direction]
+
+
+! V-60889
+! severity: None
+! Document all enabled interfaces for PIM in the network's multicast topology diagram. Disable support for PIM on interfaces that are not required to support it.
+! 
+! Interfaces have PIM disabled by default. To disable PIM from an interface active in a multi-cast network, enter "no pim sparse-mode" in the interface configuration mode.
+
+
+! V-60891
+! severity: None
+! Configure neighbor filters to only accept PIM control plane traffic from documented PIM neighbors. Bind neighbor filters to all PIM-enabled interfaces.
+! 
+! To create a new neighbor filter, create an access list by entering:
+! 
+! ip access-list [name]
+! [ip access list permit/deny statement]
+! exit
+! 
+! Then apply the neighbor filter based on the accesslist to the PIM-enabled interface:
+! 
+! int ethernet 1
+! ip pim neighbor-filter [name-of-ACL]
+
+
+! V-60893
+! severity: None
+! Configure the appropriate boundaries to contain packets addressed within the administratively scoped zone. Defined multicast addresses are FFx4::/16, FFx5::/16, FFx8::/16, and 239.255.0.0/16.
+! 
+! To create a PIM Boundary, create an access list by entering:
+! 
+! ip access-list [name]
+! [ip access list permit/deny statement]
+! exit
+! 
+! Then apply the boundary filter based on the accesslist to the PIM-enabled interface:
+! 
+! int ethernet [X]
+! ip multicast boundary [name-of-ACL]
+
+
+! V-60895
+! severity: None
+! Remove subinterfaces and disable any inactive ports on the router via the "shutdown" command on the interface configuration mode.
+
+
+! V-60897
+! severity: None
+! Configure the ingress filter of the perimeter router connected to an Alternate Gateway to only permit packets with destination addresses of the site's NIPRNet address space or a destination address belonging to the address block assigned by the Alternate Gateway network service provider. To configure an example of such a statement, enter:
+! 
+! ip access-list [name]
+! permit ip [source] [destination]
+! exit
+! interface [router interface]
+! ip access-group [name] in
+! exit
+
+
+! V-60899
+! severity: None
+! Configure a static route on the perimeter router to reach the AS of a router connecting to an Alternate Gateway
+! 
+! Ip route [destination/mask] [forwarding interface]
+
+
+! V-60903
+! severity: None
+! Configure the router so that static routes are not redistributed to an Alternate Gateway into either an Exterior Gateway Protocol or Interior Gateway Protocol to the NIPRNet or to other Autonomous System. Enter "no redistribute static" into the routing process configuration to fulfill this requirement.
+! 
+! To configure a Route Map to allow for redistribution of some static routes, refer to Chapter 18.3 of the Arista Configuration Manual.
+
+
+! V-60905
+! severity: None
+! Configure the router to enforce that Interior Gateway Protocol instances configured on the out-of-band management gateway router only peer with their own routing domain.
+! 
+! To configure a management vrf, enter the following from the configuration mode:
+! vrf definition [name]
+! rd [AS#]:[local assignment]
+! 
+! Then, from the interface configuration mode, assign the interface to the VRF:
+! interface [type][number]
+! vrf forwarding [vrf name]
+! 
+! Then enable IP routing for the VRF:
+! ip routing vrf [name]
+! 
+! Then, from the IGP configuration mode interface, configure the routing protocols.
+! router [protocol] [processID]
+! vrf [name]
+! [configuration statement]
+! 
+! To remove offending redistribute statements, enter the command:
+! no redistribute [connected/ospf/bgp/etc]
+
+
+! V-60907
+! severity: None
+! Configure the Interior Gateway Protocol instance used for the managed network to prohibit redistribution of routes into the Interior Gateway Protocol instance used for the management network, and vice versa.
+! 
+! This can be configured via the VRF configuration provided in SRG-NET-000019-RTR-000012.
+
+
+! V-60909
+! severity: None
+! Configure the management interface as passive for the Interior Gateway Protocol instance configured for the managed network.
+! 
+! From the router configuration interface:
+! 
+! passive-interface management [#]
+
+
+! V-60911
+! severity: None
+! Configure the router to enforce flow control using explicit security attributes (for example, IP addresses, port numbers, protocol, Autonomous System, or interface) on information, source, and destination objects as a basis for flow control decisions.
+! 
+! To enforce flow control using explicit security attributes, configure access control lists as per organization-defined requirements, to include statements such as:
+! 
+! ip access-list [Name}
+! deny [protocol] [source address] [source port] [destination address] [destination port] [dscp filter] [ttl filter]
+
+
+! V-60913
+! severity: None
+! Configure authentication to be enabled for every protocol that affects the routing or forwarding tables.
+! 
+! To configure BGP authentication, in the BGP configuration mode interface, when adding neighbors, include the following statement:
+! 
+! neighbor [ip address] password [type] [password]
+! 
+! For OSPF, under the interface configuration mode, enter the following commands:
+! 
+! ip ospf authentication message-digest
+! ip ospf authentication-key [type] [key] 
+! 
+! To Globally Configure IS-IS Authentication, use:
+! router isis [instance number] authentication mode md5 [level 1 | level 2] authentication key [0|7] [key string] [level 1 | level 2]
+! 
+! Where level 1 and level 2 variable specify the authentication to be used for each type or ISIS router, the ISIS instance number is the routing protocol instance, the variables 0 and 7 represent an encrypted or unencrypted key string, and the key string is the text for the encryption string. Global configuration authenticates ISIS LSPs, CSNPs and PSNPs. 
+! 
+! Interface configuration authenticates ISIS Hello PDUs, and is configured as such:
+! 
+! interface [ethernet | port-channel | vlan] [X] 
+! isis authentication mode md5 
+! isis authentication key [0|7] [text]
+
+
+! V-60915
+! severity: None
+! This check is only applicable to external-facing interfaces of a network edge router.
+! 
+! Configure the router to ensure that an egress filter or uRPF is configured to restrict the router from accepting any outbound IP packet that contains an external IP address in the source field.
+! 
+! Configure uRPF via the "ip-verify unicast source reachable-via [any/strict]" statement from the interface configuration mode.
+! 
+! To apply an egress filter, configure an IP access List:
+! ip access-list [name]
+! [ip access list permit/deny statement]
+! exit
+! 
+! then apply the access list to the external facing interface:
+! 
+! int ethernet [X]
+! ip access-group [name-of-ACL] out
+
+
+! V-60917
+! severity: None
+! Remove unneeded services and functions from the router. Removal is recommended since the service or function may be inadvertently enabled otherwise. However, if removal is not possible, disable the service or function.
+
+
+! V-60919
+! severity: None
+! Configure routing protocol authentication to encrypt the authentication key via the following commands under the interface configuration mode. SHA1 must be used instead of MD5 in all cases when that option is available.
+! 
+! ip ospf authentication message-digest
+! ip ospf message-digest-key [number] md5 [type] [key]
+! 
+! For IPv6 global configuration, enter:
+! ipv6 router ospf [process number]
+! area [area number] authentication ipsec spi [spi number] [md5/sha1] [passphrase/key] [0/7] [passphrase/key]
+! 
+! Alternatively, under the interface configuration mode, enter:
+! ipv6 ospf authentication ipsec spi [spi number] [md5/sha1] [passphrase/key] [0/7] [passphrase/key]
+! 
+! To use ESP encryption on AH headers, instead enter:
+! ipv6 router ospf [process number]
+! area [area number] encryption ipsec spi [spi number] esp null [md5/sha1] [passphrase/key] [0/7] [passphrase/key] 
+! 
+! or on an interface:
+! ipv6 ospf encryption ipsec spi [spi number] esp null [md5/sha1] [passphrase/key] [0/7] [passphrase/key]
+
+
+! V-60921
+! severity: None
+config
+router bgp [AS number]
+neighbor [address] ebgp-multihop 255
+exit
+ip access-list [name]
+permit tcp [src address/mask] [dst address/mask] eq bgp ttl eq 255 log
+exit
+control-plane
+ip access-group [name] [direction]
+
+
+! V-60923
+! severity: None
+! Implement a mechanism for traffic prioritization and bandwidth reservation. This mechanism must enforce the traffic priorities specified by the Combatant Commanders/Services/Agencies.
+! 
+! Arista QoS implementations vary according to the underlying hardware platform. For a complete reference on how to configure QoS for the platform under evaluation, refer to the Arista configuration manual, Chapter 21.
+
+
+! V-60927
+! severity: None
+! Configure the router maximum hop limit value to at least 32.
+! 
+! From the interface configuration mode, enter:
+! 
+! ipv6 nd ra hop-limit 32
+
+
+! V-60929
+! severity: None
+! Configure the router to only allow incoming communications from authorized sources to be routed to authorized destinations.
+! 
+! Implement access control lists or policy-based routing as defined in the Arista Configuration Manual, chapters 18 and 22 respectively.
+
+
+! V-60933
+! severity: None
+! Disable RIP via the "no router rip" command.
+
+
