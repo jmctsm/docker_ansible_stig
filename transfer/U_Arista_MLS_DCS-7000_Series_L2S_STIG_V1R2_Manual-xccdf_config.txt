@@ -1,0 +1,104 @@
+
+! there are many variables still left to work but
+! this is a good start to work from
+        
+
+hostname test
+ip domain-name test.com
+crypto key gen rsa mod 2048
+
+
+
+! V-60813
+! severity: None
+! Configure the switch to use spanning-tree protocol for Layer-2 connections.
+! 
+! The version of spanning-tree protocol as well as the VLANs upon which it is enabled must be determined according to organizational use and site policy.
+! 
+! For full configuration examples, refer to the Arista Configuration Manual, Chapter 20.
+
+
+! V-60821
+! severity: None
+configure
+mac access-list STIG
+ permit [src mac] [src mask] [dst mac] [dst mask]/[any] [protocol]
+exit
+
+
+! V-60823
+! severity: None
+config
+interface Ethernet[X]
+ switchport access vlan [Y]
+ dot1x pae authenticator
+ dot1x reauthentication
+ dot1x port-control auto
+ dot1x host-mode single-host
+ dot1x timeout quiet-period [value]
+ dot1x timeout reauth-period [value]
+ dot1x max-reauth-req [value]
+logging level DOT1X informational
+aaa authentication dot1x default group radius
+dot1x system-auth-control
+
+
+! V-60825
+! severity: None
+config
+interface Ethernet[X]
+ switchport access vlan [Y]
+ dot1x pae authenticator
+ dot1x reauthentication
+ dot1x port-control auto
+ dot1x host-mode single-host
+ dot1x timeout quiet-period [value]
+ dot1x timeout reauth-period [value]
+ dot1x max-reauth-req [value]
+logging level DOT1X informational
+aaa authentication dot1x default group radius
+dot1x system-auth-control
+
+
+! V-60827
+! severity: None
+config
+interface Ethernet[X]
+ dot1x reauthentication
+ dot1x timeout reauth-period 3600
+
+
+! V-60829
+! severity: None
+config
+interface Ethernet[X]
+ switchport access vlan [Y]
+ dot1x pae authenticator
+ dot1x reauthentication
+ dot1x port-control auto
+ dot1x host-mode single-host
+ dot1x timeout quiet-period [value]
+ dot1x timeout reauth-period 3600
+ dot1x max-reauth-req [value]
+logging level DOT1X informational
+aaa authentication dot1x default group radius
+dot1x system-auth-control
+
+
+! V-60831
+! severity: None
+config
+interface Ethernet[X]
+ switchport access vlan [Y]
+ dot1x pae authenticator
+ dot1x reauthentication
+ dot1x port-control auto
+ dot1x host-mode single-host
+ dot1x timeout quiet-period [value]
+ dot1x timeout reauth-period 3600
+ dot1x max-reauth-req [value]
+logging level DOT1X informational
+aaa authentication dot1x default group radius
+dot1x system-auth-control
+
+
