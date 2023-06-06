@@ -12,25 +12,46 @@ a different file.  Have to wait and see how this all goes.
 import os
 import subprocess
 
+TRANSFER_LOCATION = "./transfer/"
+ROLES_PATH = "./playbooks/roles/"
+
 initial_menu_options = {
-    1: "Run Network IOS XE STIG using Ansible",
-    2: "Generate STIG Config",
-    3: "Run Parsers",
-    4: "Exit",
+    1: {"menu_name": "Run Network IOS XE STIG using Ansible", },
+    2: {"menu_name": "Generate STIG Config", },
+    3: {"menu_name": "Run Parsers", },
+    4: {"menu_name": "Exit", },
 }
 
 run_ansible_options = {
-    1: "Run Ansible IOS XE STIG in check mode",
-    2: "Run Ansible IOS XE STIG in appy mode (not implemented yet)",
-    3: "Return to Main Menu",
-    4: "Exit",
+    1: {"menu_name": "Run Ansible IOS XE NDM RTR V2R3 STIG in check mode",
+        "config_file_name": "iosxe_ndm_rtr_v2r3_stig.yml",
+        "env_settings": {"XML_PATH": TRANSFER_LOCATION,
+                         "STIG_PATH": f"{ ROLES_PATH }iosxeSTIG_NDM_RTR_V2R3/files/"},
+        },
+    2: {"menu_name": "Run Ansible IOS XE Router V2R1 STIG in check mode",
+        "config_file_name": "iosxe_router_v2r1_stig.yml",
+        "env_settings": {"XML_PATH": TRANSFER_LOCATION,
+                         "STIG_PATH": f"{ ROLES_PATH }iosxeSTIG_Router_V2R1/files/"},
+        },
+    3: {"menu_name": "Run Ansible Ubuntu 18.04 STIG in check mode",
+        "config_file_name": "ubuntu1804_stig.yml",
+        "env_settings": {"XML_PATH": TRANSFER_LOCATION,
+                         "STIG_PATH": f"{ ROLES_PATH }ubuntu1804STIG/files/"},
+        },
+    4: {"menu_name": "Run Ansible Ubuntu 20.04 STIG in check mode",
+        "config_file_name": "ubuntu_2004_stig.yml",
+        "env_settings": {"XML_PATH": TRANSFER_LOCATION,
+                         "STIG_PATH": f"{ ROLES_PATH }ubuntu2004STIG/files/"},
+        },
+    5: {"menu_name": "Return to Main Menu", },
+    6: {"menu_name": "Exit", },
 }
 
 
 parsers_menu_options = {
-    1: "Network IOS XE STIG XCCDF",
-    2: "Return to Main Menu",
-    3: "Exit",
+    1: {"menu_name": "Network IOS XE STIG XCCDF", },
+    2: {"menu_name": "Return to Main Menu", },
+    3: {"menu_name": "Exit", },
 }
 
 config_menu_options = {}
@@ -43,12 +64,12 @@ def print_menu(menu_options):
     to select from
     """
     for key in menu_options.keys():
-        print(key, "--", menu_options[key])
+        print(key, "--", menu_options[key]["menu_name"])
 
 
 def set_ansible_environment_variables(
     config_fle_location,
-    stig_ansible_iosxe=False,
+    env_variables=False,
 ):
     """
     to use the correct call this uses environment variables
@@ -57,14 +78,13 @@ def set_ansible_environment_variables(
     variables need to be set for the callback
     """
     os.environ["ANSIBLE_CONFIG"] = config_fle_location
-    if stig_ansible_iosxe:
-        os.environ["XML_PATH"] = "./transfer/"
-        os.environ["STIG_PATH"] = "./playbooks/roles/iosxeSTIG/files/"
-    return
+    if env_variables:
+        os.environ["XML_PATH"] = env_variables["XML_PATH"]
+        os.environ["STIG_PATH"] = env_variables["STIG_PATH"]
 
 
 def unset_ansible_environment_variables(
-    stig_ansible_iosxe=False,
+    env_variables=False,
 ):
     """
     Once Ansible runs, this will clean up all
@@ -73,10 +93,9 @@ def unset_ansible_environment_variables(
     PATH variables as well
     """
     del os.environ["ANSIBLE_CONFIG"]
-    if stig_ansible_iosxe:
+    if env_variables:
         del os.environ["XML_PATH"]
         del os.environ["STIG_PATH"]
-    return
 
 
 def call_subprocess(arg_list):
@@ -103,49 +122,34 @@ def run_ansible():
         # options 1 and 2 run the XCCDF parser (may take this out
         # if more run it).
         print_menu(run_ansible_options)
+        print("The options below will only run in Check mode.")
+        print("No changes will happen.")
         print("Options 1 and 2 will also run the XCCDF parser")
         option = get_option(parsers_menu_options)
-        # if option 1 or 2, set configuration file for IOS XE STIG
-        # and set that this is the IOSXE STIG
-        if option == 1 or option == 2:
-            print("Running Ansible Network IOS XE STIG STIG in check mode")
-            set_ansible_environment_variables(
-                config_fle_location="./playbooks/iosxe_stig_ansible.cfg",
-                stig_ansible_iosxe=True,
-            )
-            # option 1 runs this in check mode
-            if option == 1:
-                call_subprocess(
-                    [
-                        "ansible-playbook",
-                        "playbooks/iosxe_stig.yml",
-                        "--check",
-                    ],
-                )
-            # option 2 runs this in apply mode
-            elif option == 2:
-                call_subprocess(
-                    [
-                        "ansible-playbook",
-                        "playbooks/iosxe_stig.yml",
-                    ],
-                )
-            # once ansible runs, parser will run to make word doc, JSON file,
-            # and configuration file.  Afterwards all environment variables
-            # created are unset and returns to the main menu
-            print("Ansible complete.  Running parser now.")
-            call_subprocess(["python", "parsers/iosxe_stig_xccdf_parser.py"])
-            print("Parser complete.  Files in transfer folder. ",
-                  "Returning to main menu.")
-            unset_ansible_environment_variables(stig_ansible_iosxe=True)
-            return
         # returns to the main menu
-        if option == 3:
+        if option == 5:
             return
         # Exits the entire program
-        if option == 4:
+        if option == 6:
             print("Exiting the program")
             exit()
+        set_ansible_environment_variables(
+            config_fle_location=run_ansible_options[option]["config_file_name"],
+            env_variables=run_ansible_options[option]["env_settings"],
+        )
+        call_subprocess(
+            [
+                "ansible-playbook",
+                "playbooks/iosxe_stig.yml",
+                "--check",
+            ],
+        )
+        print("Ansible complete.  Running parser now.")
+        call_subprocess(["python", "parsers/iosxe_stig_xccdf_parser.py"])
+        print("Parser complete.  Files in transfer folder. ",
+              "Returning to main menu.")
+        unset_ansible_environment_variables(
+            env_variables=run_ansible_options[option]["env_settings"],)
 
 
 def generate_configs():
@@ -157,12 +161,12 @@ def generate_configs():
         xml_files = os.listdir(f"{ os.getcwd()}/xml_files/")
         counter = 1
         for file in xml_files:
-            config_menu_options[counter] = file
+            config_menu_options[counter] = {"menu_name": file}
             counter += 1
         return_number = counter
         exit_number = counter + 1
-        config_menu_options[return_number] = "Return to Main Menu"
-        config_menu_options[exit_number] = "Exit"
+        config_menu_options[return_number] = {"menu_name": "Return to Main Menu"}
+        config_menu_options[exit_number] = {"menu_name": "Exit"}
         # print menu options and get user input
         print_menu(config_menu_options)
         option = get_option(parsers_menu_options)
@@ -173,28 +177,32 @@ def generate_configs():
         elif option == exit_number:
             print("Exiting the program")
             exit()
-        # Creates the IOS XE config.  Requires the hostname
+        # Creates the config.  Requires the hostname
         # and device domain name.  Once gotten then pass to the
         # config generator and once done return to the main menu
-        elif "IOS-XE" in config_menu_options[option]:
+        elif "IOS-XE" in config_menu_options[option]["menu_name"]:
             print("Will create STIG IOS XE config")
-            hostname = get_string_input("device hostname")
-            domain_name = get_string_input("device domain name")
-            full_file_path = f"{ os.getcwd()}/xml_files/{ config_menu_options[option] }"
-            call_subprocess(
-                [
-                    "python",
-                    "disa_scap_converters/iosxe_scap_converter.py",
-                    f"{ hostname }",
-                    f"{ domain_name }",
-                    f"{ full_file_path }"
-                ],
-            )
-            print(
-                "Config generator run.  Files in transfer folder. ",
-                "Returning to main menu.",
-            )
-            return
+            converter = "disa_scap_converters/iosxe_scap_converter.py"
+        elif "Arista" in config_menu_options[option]["menu_name"]:
+            print("Will create STIG Arista config")
+            converter = "disa_scap_converters/arista_scap_converter.py"
+        hostname = get_string_input("device hostname")
+        domain_name = get_string_input("device domain name")
+        file_name = config_menu_options[option]['menu_name']
+        full_file_path = f"{ os.getcwd()}/xml_files/{ file_name }"
+        call_subprocess(
+            [
+                "python",
+                f"{ converter }",
+                f"{ hostname }",
+                f"{ domain_name }",
+                f"{ full_file_path }"
+            ],
+        )
+        print(
+            "Config generator run.  Files in transfer folder. ",
+            "Returning to main menu.",
+        )
 
 
 def get_string_input(what_you_want):
